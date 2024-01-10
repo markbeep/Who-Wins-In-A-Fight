@@ -15,6 +15,4 @@ RUN nix build .#compare
 COPY static static
 RUN nix run .#tailwindcss -- -i static/tw.css -o static/main.css --minify
 
-COPY content content
-
 CMD ./result/bin/compare

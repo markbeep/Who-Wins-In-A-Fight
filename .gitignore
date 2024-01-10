@@ -2,3 +2,5 @@
 .direnv
 *_templ.go
 tmp
+result
+main.css

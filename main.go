@@ -3,16 +3,14 @@ package main
 import (
 	"compare/components"
 	storage "compare/internal"
+	"compare/internal/category"
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
-	"slices"
-	"strconv"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -23,10 +21,20 @@ var (
 	port = flag.String("port", os.Getenv("PORT"), "port to host the website at")
 )
 
-var cards = []storage.BattleCard{
-	{Url: "/static/chuck.png", ID: 0, Name: "Chuck Norris"},
-	{Url: "/static/superman.jpg", ID: 1, Name: "Superman"},
-	{Url: "/static/kermit.jpeg", ID: 2, Name: "Kermit the Gangsta Frog"},
+// TODO: store in db
+var categories = []storage.Category{
+	{
+		Token: "123", // TODO: this should be a token stored in the db and regeneratable (incase of leak)
+		Title: "Who's stronger?",
+		AllCards: map[int]*storage.BattleCard{
+			0: {Url: "/static/chuck.png", ID: 0, Name: "Chuck Norris"},
+			1: {Url: "/static/superman.jpg", ID: 1, Name: "Superman"},
+			2: {Url: "/static/kermit.jpeg", ID: 2, Name: "Kermit the Gangsta Frog"}},
+		AllCardsMutex: sync.RWMutex{},
+		// TODO: Fill this db with relevant battles from the db on startup
+		ActiveBattles:      map[string]storage.Battle{},
+		ActiveBattlesMutex: sync.RWMutex{},
+	},
 }
 
 func main() {
@@ -37,9 +45,13 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Get("/", BattleGET)
-	r.Post("/card/{id1:\\d+}/{id2:\\d+}", BattlePOST)
+	r.Get("/", templ.Handler(components.Index()).ServeHTTP)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })
 	r.Get("/static/*", Static)
+	for i := range categories {
+		c := &categories[i]
+		r.Mount("/"+c.Token, category.CategoryRouter(c))
+	}
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)
@@ -68,80 +80,4 @@ func Static(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFile(w, r, path)
-}
-
-func getRandomBattle() (storage.BattleCard, storage.BattleCard) {
-	index1 := rand.Intn(len(cards))
-	card1 := cards[index1]
-	for {
-		index2 := rand.Intn(len(cards))
-		if index2 != index1 {
-			return card1, cards[index2]
-		}
-	}
-}
-
-func BattleGET(w http.ResponseWriter, r *http.Request) {
-	// TODO: get random cards from db
-	card1, card2 := getRandomBattle()
-	templ.Handler(components.Index("Who's stronger?", card1, card2, cards)).ServeHTTP(w, r)
-}
-
-func BattlePOST(w http.ResponseWriter, r *http.Request) {
-	// TODO: remove this. simulates a slow query
-	time.Sleep(500 * time.Millisecond)
-
-	// Log results
-	id, err := strconv.Atoi(chi.URLParam(r, "id1"))
-	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-		return
-	}
-	// TODO: make this fetch and update the db entry
-	var winningCard *storage.BattleCard
-	found := false
-	for i := range cards {
-		if cards[i].ID == id {
-			winningCard = &cards[i]
-			found = true
-		}
-	}
-	if !found {
-		log.Println("ERROR! Winning card not found")
-		return
-	}
-
-	// update loser
-	id, err = strconv.Atoi(chi.URLParam(r, "id2"))
-	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-	}
-	var losingCard *storage.BattleCard
-	found = false
-	for i := range cards {
-		if cards[i].ID == id {
-			losingCard = &cards[i]
-			found = true
-		}
-	}
-	if !found {
-		log.Println("ERROR! Losing card not found")
-		return
-	}
-
-	winningCard.Wins += 1
-	log.Printf("%d won!\n", winningCard.ID)
-	losingCard.Losses += 1
-	log.Printf("%d lost!\n", losingCard.ID)
-
-	// Start a new battle
-	// TODO: get random cards from db
-	card1, card2 := getRandomBattle()
-	templ.Handler(components.Battle(card1, card2)).ServeHTTP(w, r)
-}
-
-func Leaderboard(w http.ResponseWriter, r *http.Request) {
-	slices.SortFunc(cards, func(a, b storage.BattleCard) int {
-		return 0
-	})
 }
