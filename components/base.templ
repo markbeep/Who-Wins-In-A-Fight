@@ -1,0 +1,34 @@
+package components
+
+templ Base(title, description string) {
+	<!DOCTYPE html/>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link rel="stylesheet" href="/static/main.css"/>
+			<script src="https://unpkg.com/htmx.org@1.9.6"></script>
+			<script defer src="https://unpkg.com/htmx.org/dist/ext/preload.js"></script>
+			<title>{ title }</title>
+			<meta name="description" content={ description }/>
+			<meta name="og:site_name" content={ title }/>
+			<meta name="og:type" content="blog"/>
+			<meta name="og:image" content="/static/tn.png"/>
+			<meta name="og:twitter" content="/static/tn.png"/>
+			<link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png"/>
+			<link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png"/>
+			<link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png"/>
+			<link rel="manifest" href="/static/favicons/site.webmanifest"/>
+		</head>
+		<body class="dark" hx-ext="preload">
+			<!--[if lt IE 7]>
+        <p class="browsehappy">
+            You are using an <strong>outdated</strong> browser. Please
+            <a href="#">upgrade your browser</a> to improve your experience.
+        </p>
+        <![endif]-->
+			{ children... }
+		</body>
+	</html>
+}

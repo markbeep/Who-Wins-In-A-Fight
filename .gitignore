@@ -1,0 +1,4 @@
+.envrc
+.direnv
+*_templ.go
+tmp
