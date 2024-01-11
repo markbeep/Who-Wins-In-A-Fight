@@ -20,7 +20,7 @@
           compare = pkgs.buildGo121Module {
             name = "compare";
             src = gitignore.lib.gitignoreSource ./.;
-            vendorHash = "sha256-3up0TXlJkf48LQd3KWKwhXT8W2evBFcbg6jvv6MEKRI=";
+            vendorHash = "sha256-3DWRPfwf3GMwde/4g1eP2c3bgAgCGb8dEdP4LpumLms=";
 
             preBuild = ''
               ${templ-pkg}/bin/templ generate
@@ -36,7 +36,6 @@
               tailwindcss
               nodejs_20
               templ-pkg
-              air
           ];
         };
       }

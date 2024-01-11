@@ -15,10 +15,21 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
+	"github.com/sirupsen/logrus"
 )
 
 var (
 	port = flag.String("port", os.Getenv("PORT"), "port to host the website at")
+
+	// Logging
+	logLevel = flag.String("log-level", "INFO", "one of: TRACE, DEBUG, INFO, WARN, ERROR")
+
+	// Postgres DB
+	dbUser     = flag.String("db-user", os.Getenv("POSTGRES_DB_USER"), "user of the database")
+	dbPassword = flag.String("db-password", os.Getenv("POSTGRES_DB_PW"), "password for the database")
+	dbName     = flag.String("db-name", os.Getenv("POSTGRES_DB_NAME"), "name of the database")
+	dbPort     = flag.String("db-port", os.Getenv("POSTGRES_DB_PORT"), "port of the database")
+	dbHost     = flag.String("db-host", os.Getenv("POSTGRES_DB_SERVER"), "host of the database")
 )
 
 // TODO: store in db
@@ -43,7 +54,31 @@ func main() {
 		*port = "3000"
 	}
 
+	// TODO: involve the logger more
+	logger := logrus.New()
+	logger.SetReportCaller(true)
+	logger.SetLevel(func(l string) logrus.Level {
+		lvl, err := logrus.ParseLevel(l)
+		if err != nil {
+			return logrus.TraceLevel
+		}
+		return lvl
+	}(*logLevel))
+
+	// Connects to the db and handles migrations
+	db, err := storage.GetDB(*dbUser, *dbPassword, *dbName, *dbHost, *dbPort)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer db.Close()
+	err = storage.MigrateDatabase(db, storage.MigrationLogger{Logger: logger, LogLevel: *logLevel}, "migrations")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	// Webserver
 	r := chi.NewRouter()
+	r.Use(MiddlewareLogging)
 
 	r.Get("/", templ.Handler(components.Index()).ServeHTTP)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })

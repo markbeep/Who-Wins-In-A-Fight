@@ -22,7 +22,7 @@ templ CategoryIndex(title string, battle storage.Battle, cards []storage.BattleC
 }
 
 templ Battle(battle storage.Battle) {
-	<main id="cards" class="flex gap-10">
+	<main id="cards" class="grid grid-cols-2 w-4/5 gap-10">
 		@Card(battle.Card1, battle.CategoryToken, battle.Token, 0)
 		@Card(battle.Card2, battle.CategoryToken, battle.Token, 1)
 	</main>
@@ -35,7 +35,7 @@ script DisableButton() {
 }
 
 templ Card(card storage.BattleCard, categoryToken, token string, index int) {
-	<div class="">
+	<div>
 		<button
 			hx-post={ fmt.Sprintf("/%s/card/%s/%d", categoryToken, token, index) }
 			hx-target="#cards"

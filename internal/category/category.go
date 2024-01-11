@@ -51,7 +51,7 @@ func getRandomBattle(c *storage.Category) (*storage.Battle, error) {
 	}
 	c.AllCardsMutex.RUnlock()
 	for {
-		token, err := GenerateToken(30)
+		token, err := GenerateToken(20)
 		if err != nil {
 			return nil, err
 		}
