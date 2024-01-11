@@ -18,15 +18,15 @@ import (
 
 func CategoryRouter(c *storage.Category) http.Handler {
 	r := chi.NewRouter()
-	r.Get("/", BattleGET(c))
-	r.Post("/card/{token:\\w+}/{index:\\d+}", BattlePOST(c))
-	r.Get("/leaderboard", Leaderboard(c))
+	r.Get("/", battleGET(c))
+	r.Post("/card/{token:\\w+}/{index:\\d+}", battlePOST(c))
+	r.Get("/leaderboard", leaderboard(c))
 	return r
 }
 
 // Generate a random token of a given length
 func GenerateToken(len int) (string, error) {
-	b := make([]byte, len)
+	b := make([]byte, len/2) // 2 bytes => 1 hex
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("")
 	}
@@ -51,7 +51,7 @@ func getRandomBattle(c *storage.Category) (*storage.Battle, error) {
 	}
 	c.AllCardsMutex.RUnlock()
 	for {
-		token, err := GenerateToken(20)
+		token, err := GenerateToken(10)
 		if err != nil {
 			return nil, err
 		}
@@ -89,12 +89,13 @@ func getSortedCards(c *storage.Category) []storage.BattleCard {
 	return sortedCards
 }
 
-func BattleGET(c *storage.Category) func(w http.ResponseWriter, r *http.Request) {
+func battleGET(c *storage.Category) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: get random cards from db
 		battle, err := getRandomBattle(c)
 		if err != nil {
 			log.Printf("getRandomBattle err = %s", err)
+			http.Error(w, "failed to create battle", http.StatusInternalServerError)
 			return
 		}
 		sortedCards := getSortedCards(c)
@@ -102,7 +103,7 @@ func BattleGET(c *storage.Category) func(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func BattlePOST(c *storage.Category) func(w http.ResponseWriter, r *http.Request) {
+func battlePOST(c *storage.Category) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: remove this. simulates a slow query
 		time.Sleep(500 * time.Millisecond)
@@ -150,7 +151,7 @@ func BattlePOST(c *storage.Category) func(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func Leaderboard(c *storage.Category) func(w http.ResponseWriter, r *http.Request) {
+func leaderboard(c *storage.Category) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sortedCards := getSortedCards(c)
 		templ.Handler(components.Leaderboard(sortedCards)).ServeHTTP(w, r)

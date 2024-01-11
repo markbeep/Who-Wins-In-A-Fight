@@ -2,13 +2,6 @@
 @tailwind utilities;
 @tailwind base;
 
-@layer base {
-    body {
-        @apply w-screen;
-        @apply bg-gray-700;
-    }
-}
-
 .htmx-indicator {
     opacity: 0;
     transition: opacity 500ms ease-in;

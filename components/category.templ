@@ -10,19 +10,12 @@ templ CategoryIndex(title string, battle storage.Battle, cards []storage.BattleC
 			<h1 class="text-3xl text-white mb-4">{ title }</h1>
 			@Battle(battle)
 			<p id="card-loader" class="text-gray-400 htmx-indicator">Loading next battle...</p>
-			<br class="my-10"/>
-			<button
-				class="p-2 border border-white text-white rounded-md w-[20vw]"
-				hx-target="#leaderboard"
-				hx-get={ fmt.Sprintf("/%s/leaderboard", battle.CategoryToken) }
-			>Refresh</button>
-			@Leaderboard(cards)
 		</div>
 	}
 }
 
 templ Battle(battle storage.Battle) {
-	<main id="cards" class="grid grid-cols-2 w-4/5 gap-10">
+	<main id="cards" class="flex justify-center w-4/5 gap-6 md:gap-20">
 		@Card(battle.Card1, battle.CategoryToken, battle.Token, 0)
 		@Card(battle.Card2, battle.CategoryToken, battle.Token, 1)
 	</main>
@@ -35,23 +28,21 @@ script DisableButton() {
 }
 
 templ Card(card storage.BattleCard, categoryToken, token string, index int) {
-	<div>
-		<button
-			hx-post={ fmt.Sprintf("/%s/card/%s/%d", categoryToken, token, index) }
-			hx-target="#cards"
-			hx-indicator="#card-loader"
-			onClick={ DisableButton() }
-			class="battle-card"
+	<button
+		hx-post={ fmt.Sprintf("/%s/card/%s/%d", categoryToken, token, index) }
+		hx-target="#cards"
+		hx-indicator="#card-loader"
+		onClick={ DisableButton() }
+		class="battle-card w-fit"
+	>
+		<p class="text-clip mb-1 text-xl md:text-3xl w-[40vw] max-w-[40vh] text-center overflow-clip h-10">{ card.Name }</p>
+		<p class="text-white w-[40vw] max-w-[40vh]">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
+		<div
+			class="w-fit border-2 border-gray-200 rounded-md hover:border-red-400 hover:opacity-70"
 		>
-			<p class="text-nowrap text-white mb-1 w-[40vw]">{ card.Name }</p>
-			<div
-				class="w-[40vw] h-[calc(60vw + 2px)] border-2 border-gray-200 rounded-md hover:border-red-400 hover:opacity-70"
-			>
-				<img src={ card.Url } class="object-cover w-[40vw] h-[60vw] rounded-md"/>
-			</div>
-			<p class="text-white">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
-		</button>
-	</div>
+			<img src={ card.Url } class="object-cover w-[40vw] max-w-[40vh] h-[60vw] max-h-[60vh] rounded-md"/>
+		</div>
+	</button>
 }
 
 templ Leaderboard(cards []storage.BattleCard) {

@@ -36,6 +36,7 @@
               tailwindcss
               nodejs_20
               templ-pkg
+              lsof
           ];
         };
       }

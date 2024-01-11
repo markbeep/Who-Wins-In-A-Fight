@@ -25,9 +25,9 @@ var (
 	logLevel = flag.String("log-level", "INFO", "one of: TRACE, DEBUG, INFO, WARN, ERROR")
 
 	// Postgres DB
-	dbUser     = flag.String("db-user", os.Getenv("POSTGRES_DB_USER"), "user of the database")
-	dbPassword = flag.String("db-password", os.Getenv("POSTGRES_DB_PW"), "password for the database")
-	dbName     = flag.String("db-name", os.Getenv("POSTGRES_DB_NAME"), "name of the database")
+	dbUser     = flag.String("db-user", os.Getenv("POSTGRES_USER"), "user of the database")
+	dbPassword = flag.String("db-password", os.Getenv("POSTGRES_PASSWORD"), "password for the database")
+	dbName     = flag.String("db-name", os.Getenv("POSTGRES_DB"), "name of the database")
 	dbPort     = flag.String("db-port", os.Getenv("POSTGRES_DB_PORT"), "port of the database")
 	dbHost     = flag.String("db-host", os.Getenv("POSTGRES_DB_SERVER"), "host of the database")
 )
@@ -87,6 +87,7 @@ func main() {
 		c := &categories[i]
 		r.Mount("/"+c.Token, category.CategoryRouter(c))
 	}
+	r.Mount("/create", category.CreateRoute())
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)

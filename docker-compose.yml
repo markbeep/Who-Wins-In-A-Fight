@@ -1,24 +1,23 @@
-version: '3'
+version: "3"
 
 services:
-  website:
-    build: .
-    ports:
-      - 3000:3000
-    env_file:
-      - .env.development
+  # website:
+  #   build: .
+  #   ports:
+  #     - 3000:3000
+  #   env_file:
+  #     - .env
 
   db:
     image: postgres:15.4-alpine3.18
     ports:
       - "5432:5432"
     env_file:
-      - .env.development
+      - .env
     volumes:
       - ./data/sql:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d docker -U docker" ]
+      test: ["CMD-SHELL", "pg_isready -d compare -U docker"]
       interval: 1s
       timeout: 1s
       retries: 50
-

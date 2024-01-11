@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS battle;
+DROP TABLE IF EXISTS battle_card;
+DROP TABLE IF EXISTS category;

@@ -21,14 +21,26 @@ templ Base(title, description string) {
 			<link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png"/>
 			<link rel="manifest" href="/static/favicons/site.webmanifest"/>
 		</head>
-		<body class="dark" hx-ext="preload">
+		<body class="dark w-screen" hx-ext="preload">
 			<!--[if lt IE 7]>
         <p class="browsehappy">
             You are using an <strong>outdated</strong> browser. Please
             <a href="#">upgrade your browser</a> to improve your experience.
         </p>
         <![endif]-->
-			{ children... }
+			<div class="dark:bg-black dark:text-white">
+				@Navbar()
+				<main class="w-full h-[calc(100vh-5rem)]">
+					{ children... }
+				</main>
+			</div>
 		</body>
 	</html>
+}
+
+templ Navbar() {
+	<nav class="h-20 flex gap-3 p-5" hx-boost="true" preload="preload:init">
+		<a class="p-2 border border-white hover:bg-gray-800" href="/">Home</a>
+		<a class="p-2 border border-white hover:bg-gray-800" href="/create">Create</a>
+	</nav>
 }
