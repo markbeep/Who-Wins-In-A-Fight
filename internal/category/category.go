@@ -4,12 +4,13 @@ import (
 	"compare/components"
 	storage "compare/internal"
 	"crypto/rand"
-	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"log"
 	mrand "math/rand"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -24,13 +25,14 @@ func CategoryRouter(c *storage.Category) http.Handler {
 	return r
 }
 
-// Generate a random token of a given length
+// Generate a random token of a given length.
+// len is the amount of random bytes to generate.
 func GenerateToken(len int) (string, error) {
-	b := make([]byte, len/2) // 2 bytes => 1 hex
+	b := make([]byte, len)
 	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("")
+		return "", fmt.Errorf("failed generating a random token. err = %s", err)
 	}
-	return hex.EncodeToString(b), nil
+	return strings.ReplaceAll(base64.URLEncoding.EncodeToString(b), "=", ""), nil
 }
 
 func getRandomBattle(c *storage.Category) (*storage.Battle, error) {
