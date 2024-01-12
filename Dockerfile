@@ -1,18 +1,24 @@
-FROM nixos/nix
+FROM golang:1.21-alpine3.18
 WORKDIR /app
 
-RUN nix-env -iA nixpkgs.nixFlakes nixpkgs.curl
-RUN echo "experimental-features = flakes nix-command" >> /etc/nix/nix.conf
+# Download tailwindcss
+RUN apk add --no-cache curl
+RUN curl -o /bin/tailwindcss -sSL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.5/tailwindcss-linux-x64
+# RUN curl -o /bin/tailwindcss -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.5/tailwindcss-linux-arm64
+RUN chmod +x /bin/tailwindcss
+RUN go install github.com/a-h/templ/cmd/templ@latest
 
 COPY tailwind.config.js .
 COPY go.mod go.sum main.go ./
 COPY internal internal
 COPY components components
-COPY flake.lock flake.nix ./
+COPY models models
 
-RUN nix build .#compare
+RUN templ generate components
+RUN go get
+RUN go build
 
 COPY static static
-RUN nix run .#tailwindcss -- -i static/tw.css -o static/main.css --minify
+RUN tailwindcss -i static/tw.css -o static/main.css --minify
 
-CMD ./result/bin/compare
+CMD ./compare

@@ -20,7 +20,7 @@
           compare = pkgs.buildGo121Module {
             name = "compare";
             src = gitignore.lib.gitignoreSource ./.;
-            vendorHash = "sha256-umEYXZr9GL5GRsWgWY+uiHuRNuDYtXvRpKNTBPjYcR0=";
+            vendorHash = "sha256-KRNok+q0cd96aoXL8sc9geFOyIUQo7dNRFEqddVhdog=";
 
             preBuild = ''
               ${templ-pkg}/bin/templ generate
