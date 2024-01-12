@@ -6,11 +6,9 @@ package models
 var TableNames = struct {
 	Battles    string
 	Cards      string
-	Categories string
 	UserTokens string
 }{
 	Battles:    "battles",
 	Cards:      "cards",
-	Categories: "categories",
 	UserTokens: "user_tokens",
 }

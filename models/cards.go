@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,176 +23,94 @@ import (
 
 // Card is an object representing the database table.
 type Card struct {
-	ID         int         `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Filename   string      `boil:"filename" json:"filename" toml:"filename" yaml:"filename"`
-	Wins       null.Int    `boil:"wins" json:"wins,omitempty" toml:"wins" yaml:"wins,omitempty"`
-	Battles    null.Int    `boil:"battles" json:"battles,omitempty" toml:"battles" yaml:"battles,omitempty"`
-	Elo        null.Int    `boil:"elo" json:"elo,omitempty" toml:"elo" yaml:"elo,omitempty"`
-	Name       null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
-	CategoryID int         `boil:"category_id" json:"category_id" toml:"category_id" yaml:"category_id"`
+	ID      int    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Wins    int    `boil:"wins" json:"wins" toml:"wins" yaml:"wins"`
+	Battles int    `boil:"battles" json:"battles" toml:"battles" yaml:"battles"`
+	Elo     int    `boil:"elo" json:"elo" toml:"elo" yaml:"elo"`
+	Name    string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Path    string `boil:"path" json:"path" toml:"path" yaml:"path"`
+	Islocal bool   `boil:"islocal" json:"islocal" toml:"islocal" yaml:"islocal"`
 
 	R *cardR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L cardL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CardColumns = struct {
-	ID         string
-	Filename   string
-	Wins       string
-	Battles    string
-	Elo        string
-	Name       string
-	CategoryID string
+	ID      string
+	Wins    string
+	Battles string
+	Elo     string
+	Name    string
+	Path    string
+	Islocal string
 }{
-	ID:         "id",
-	Filename:   "filename",
-	Wins:       "wins",
-	Battles:    "battles",
-	Elo:        "elo",
-	Name:       "name",
-	CategoryID: "category_id",
+	ID:      "id",
+	Wins:    "wins",
+	Battles: "battles",
+	Elo:     "elo",
+	Name:    "name",
+	Path:    "path",
+	Islocal: "islocal",
 }
 
 var CardTableColumns = struct {
-	ID         string
-	Filename   string
-	Wins       string
-	Battles    string
-	Elo        string
-	Name       string
-	CategoryID string
+	ID      string
+	Wins    string
+	Battles string
+	Elo     string
+	Name    string
+	Path    string
+	Islocal string
 }{
-	ID:         "cards.id",
-	Filename:   "cards.filename",
-	Wins:       "cards.wins",
-	Battles:    "cards.battles",
-	Elo:        "cards.elo",
-	Name:       "cards.name",
-	CategoryID: "cards.category_id",
+	ID:      "cards.id",
+	Wins:    "cards.wins",
+	Battles: "cards.battles",
+	Elo:     "cards.elo",
+	Name:    "cards.name",
+	Path:    "cards.path",
+	Islocal: "cards.islocal",
 }
 
 // Generated where
 
-type whereHelpernull_Int struct{ field string }
+type whereHelperbool struct{ field string }
 
-func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Int) IN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_Int) NIN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
-type whereHelpernull_String struct{ field string }
-
-func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_String) LIKE(x null.String) qm.QueryMod {
-	return qm.Where(w.field+" LIKE ?", x)
-}
-func (w whereHelpernull_String) NLIKE(x null.String) qm.QueryMod {
-	return qm.Where(w.field+" NOT LIKE ?", x)
-}
-func (w whereHelpernull_String) ILIKE(x null.String) qm.QueryMod {
-	return qm.Where(w.field+" ILIKE ?", x)
-}
-func (w whereHelpernull_String) NILIKE(x null.String) qm.QueryMod {
-	return qm.Where(w.field+" NOT ILIKE ?", x)
-}
-func (w whereHelpernull_String) IN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_String) NIN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 var CardWhere = struct {
-	ID         whereHelperint
-	Filename   whereHelperstring
-	Wins       whereHelpernull_Int
-	Battles    whereHelpernull_Int
-	Elo        whereHelpernull_Int
-	Name       whereHelpernull_String
-	CategoryID whereHelperint
+	ID      whereHelperint
+	Wins    whereHelperint
+	Battles whereHelperint
+	Elo     whereHelperint
+	Name    whereHelperstring
+	Path    whereHelperstring
+	Islocal whereHelperbool
 }{
-	ID:         whereHelperint{field: "\"cards\".\"id\""},
-	Filename:   whereHelperstring{field: "\"cards\".\"filename\""},
-	Wins:       whereHelpernull_Int{field: "\"cards\".\"wins\""},
-	Battles:    whereHelpernull_Int{field: "\"cards\".\"battles\""},
-	Elo:        whereHelpernull_Int{field: "\"cards\".\"elo\""},
-	Name:       whereHelpernull_String{field: "\"cards\".\"name\""},
-	CategoryID: whereHelperint{field: "\"cards\".\"category_id\""},
+	ID:      whereHelperint{field: "\"cards\".\"id\""},
+	Wins:    whereHelperint{field: "\"cards\".\"wins\""},
+	Battles: whereHelperint{field: "\"cards\".\"battles\""},
+	Elo:     whereHelperint{field: "\"cards\".\"elo\""},
+	Name:    whereHelperstring{field: "\"cards\".\"name\""},
+	Path:    whereHelperstring{field: "\"cards\".\"path\""},
+	Islocal: whereHelperbool{field: "\"cards\".\"islocal\""},
 }
 
 // CardRels is where relationship names are stored.
 var CardRels = struct {
-	Category     string
 	Card1Battles string
 	Card2Battles string
 }{
-	Category:     "Category",
 	Card1Battles: "Card1Battles",
 	Card2Battles: "Card2Battles",
 }
 
 // cardR is where relationships are stored.
 type cardR struct {
-	Category     *Category   `boil:"Category" json:"Category" toml:"Category" yaml:"Category"`
 	Card1Battles BattleSlice `boil:"Card1Battles" json:"Card1Battles" toml:"Card1Battles" yaml:"Card1Battles"`
 	Card2Battles BattleSlice `boil:"Card2Battles" json:"Card2Battles" toml:"Card2Battles" yaml:"Card2Battles"`
 }
@@ -201,13 +118,6 @@ type cardR struct {
 // NewStruct creates a new relationship struct
 func (*cardR) NewStruct() *cardR {
 	return &cardR{}
-}
-
-func (r *cardR) GetCategory() *Category {
-	if r == nil {
-		return nil
-	}
-	return r.Category
 }
 
 func (r *cardR) GetCard1Battles() BattleSlice {
@@ -228,9 +138,9 @@ func (r *cardR) GetCard2Battles() BattleSlice {
 type cardL struct{}
 
 var (
-	cardAllColumns            = []string{"id", "filename", "wins", "battles", "elo", "name", "category_id"}
-	cardColumnsWithoutDefault = []string{"filename", "category_id"}
-	cardColumnsWithDefault    = []string{"id", "wins", "battles", "elo", "name"}
+	cardAllColumns            = []string{"id", "wins", "battles", "elo", "name", "path", "islocal"}
+	cardColumnsWithoutDefault = []string{"name", "path", "islocal"}
+	cardColumnsWithDefault    = []string{"id", "wins", "battles", "elo"}
 	cardPrimaryKeyColumns     = []string{"id"}
 	cardGeneratedColumns      = []string{}
 )
@@ -513,17 +423,6 @@ func (q cardQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool,
 	return count > 0, nil
 }
 
-// Category pointed to by the foreign key.
-func (o *Card) Category(mods ...qm.QueryMod) categoryQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.CategoryID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Categories(queryMods...)
-}
-
 // Card1Battles retrieves all the battle's Battles with an executor via card1_id column.
 func (o *Card) Card1Battles(mods ...qm.QueryMod) battleQuery {
 	var queryMods []qm.QueryMod
@@ -550,126 +449,6 @@ func (o *Card) Card2Battles(mods ...qm.QueryMod) battleQuery {
 	)
 
 	return Battles(queryMods...)
-}
-
-// LoadCategory allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (cardL) LoadCategory(ctx context.Context, e boil.ContextExecutor, singular bool, maybeCard interface{}, mods queries.Applicator) error {
-	var slice []*Card
-	var object *Card
-
-	if singular {
-		var ok bool
-		object, ok = maybeCard.(*Card)
-		if !ok {
-			object = new(Card)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeCard)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeCard))
-			}
-		}
-	} else {
-		s, ok := maybeCard.(*[]*Card)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeCard)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeCard))
-			}
-		}
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &cardR{}
-		}
-		args = append(args, object.CategoryID)
-
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &cardR{}
-			}
-
-			for _, a := range args {
-				if a == obj.CategoryID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.CategoryID)
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`categories`),
-		qm.WhereIn(`categories.id in ?`, args...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load Category")
-	}
-
-	var resultSlice []*Category
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Category")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for categories")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for categories")
-	}
-
-	if len(categoryAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.Category = foreign
-		if foreign.R == nil {
-			foreign.R = &categoryR{}
-		}
-		foreign.R.Cards = append(foreign.R.Cards, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.CategoryID == foreign.ID {
-				local.R.Category = foreign
-				if foreign.R == nil {
-					foreign.R = &categoryR{}
-				}
-				foreign.R.Cards = append(foreign.R.Cards, local)
-				break
-			}
-		}
-	}
-
-	return nil
 }
 
 // LoadCard1Battles allows an eager lookup of values, cached into the
@@ -895,53 +674,6 @@ func (cardL) LoadCard2Battles(ctx context.Context, e boil.ContextExecutor, singu
 				break
 			}
 		}
-	}
-
-	return nil
-}
-
-// SetCategory of the card to the related item.
-// Sets o.R.Category to related.
-// Adds o to related.R.Cards.
-func (o *Card) SetCategory(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Category) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"cards\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"category_id"}),
-		strmangle.WhereClause("\"", "\"", 2, cardPrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.CategoryID = related.ID
-	if o.R == nil {
-		o.R = &cardR{
-			Category: related,
-		}
-	} else {
-		o.R.Category = related
-	}
-
-	if related.R == nil {
-		related.R = &categoryR{
-			Cards: CardSlice{o},
-		}
-	} else {
-		related.R.Cards = append(related.R.Cards, o)
 	}
 
 	return nil

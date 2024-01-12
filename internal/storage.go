@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"sync"
-	"time"
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
@@ -15,31 +13,6 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 	_ "github.com/lib/pq"
 )
-
-type BattleCard struct {
-	Url    string
-	ID     int
-	Wins   int
-	Losses int
-	Name   string
-}
-
-type Battle struct {
-	Start         time.Time
-	Card1         BattleCard
-	Card2         BattleCard
-	Token         string
-	CategoryToken string
-}
-
-type Category struct {
-	Token              string
-	Title              string
-	AllCards           map[int]*BattleCard
-	AllCardsMutex      sync.RWMutex
-	ActiveBattles      map[string]Battle
-	ActiveBattlesMutex sync.RWMutex
-}
 
 // Connects to the database and returns the instance
 func GetDB(dbUser, dbPassword, dbName, dbHost, dbPort string) (*sql.DB, error) {

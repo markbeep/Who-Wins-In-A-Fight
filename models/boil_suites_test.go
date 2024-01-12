@@ -14,77 +14,66 @@ import "testing"
 func TestParent(t *testing.T) {
 	t.Run("Battles", testBattles)
 	t.Run("Cards", testCards)
-	t.Run("Categories", testCategories)
 	t.Run("UserTokens", testUserTokens)
 }
 
 func TestDelete(t *testing.T) {
 	t.Run("Battles", testBattlesDelete)
 	t.Run("Cards", testCardsDelete)
-	t.Run("Categories", testCategoriesDelete)
 	t.Run("UserTokens", testUserTokensDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Battles", testBattlesQueryDeleteAll)
 	t.Run("Cards", testCardsQueryDeleteAll)
-	t.Run("Categories", testCategoriesQueryDeleteAll)
 	t.Run("UserTokens", testUserTokensQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Battles", testBattlesSliceDeleteAll)
 	t.Run("Cards", testCardsSliceDeleteAll)
-	t.Run("Categories", testCategoriesSliceDeleteAll)
 	t.Run("UserTokens", testUserTokensSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
 	t.Run("Battles", testBattlesExists)
 	t.Run("Cards", testCardsExists)
-	t.Run("Categories", testCategoriesExists)
 	t.Run("UserTokens", testUserTokensExists)
 }
 
 func TestFind(t *testing.T) {
 	t.Run("Battles", testBattlesFind)
 	t.Run("Cards", testCardsFind)
-	t.Run("Categories", testCategoriesFind)
 	t.Run("UserTokens", testUserTokensFind)
 }
 
 func TestBind(t *testing.T) {
 	t.Run("Battles", testBattlesBind)
 	t.Run("Cards", testCardsBind)
-	t.Run("Categories", testCategoriesBind)
 	t.Run("UserTokens", testUserTokensBind)
 }
 
 func TestOne(t *testing.T) {
 	t.Run("Battles", testBattlesOne)
 	t.Run("Cards", testCardsOne)
-	t.Run("Categories", testCategoriesOne)
 	t.Run("UserTokens", testUserTokensOne)
 }
 
 func TestAll(t *testing.T) {
 	t.Run("Battles", testBattlesAll)
 	t.Run("Cards", testCardsAll)
-	t.Run("Categories", testCategoriesAll)
 	t.Run("UserTokens", testUserTokensAll)
 }
 
 func TestCount(t *testing.T) {
 	t.Run("Battles", testBattlesCount)
 	t.Run("Cards", testCardsCount)
-	t.Run("Categories", testCategoriesCount)
 	t.Run("UserTokens", testUserTokensCount)
 }
 
 func TestHooks(t *testing.T) {
 	t.Run("Battles", testBattlesHooks)
 	t.Run("Cards", testCardsHooks)
-	t.Run("Categories", testCategoriesHooks)
 	t.Run("UserTokens", testUserTokensHooks)
 }
 
@@ -93,8 +82,6 @@ func TestInsert(t *testing.T) {
 	t.Run("Battles", testBattlesInsertWhitelist)
 	t.Run("Cards", testCardsInsert)
 	t.Run("Cards", testCardsInsertWhitelist)
-	t.Run("Categories", testCategoriesInsert)
-	t.Run("Categories", testCategoriesInsertWhitelist)
 	t.Run("UserTokens", testUserTokensInsert)
 	t.Run("UserTokens", testUserTokensInsertWhitelist)
 }
@@ -104,9 +91,6 @@ func TestInsert(t *testing.T) {
 func TestToOne(t *testing.T) {
 	t.Run("BattleToCardUsingCard1", testBattleToOneCardUsingCard1)
 	t.Run("BattleToCardUsingCard2", testBattleToOneCardUsingCard2)
-	t.Run("BattleToCategoryUsingCategory", testBattleToOneCategoryUsingCategory)
-	t.Run("CardToCategoryUsingCategory", testCardToOneCategoryUsingCategory)
-	t.Run("UserTokenToCategoryUsingCategory", testUserTokenToOneCategoryUsingCategory)
 }
 
 // TestOneToOne tests cannot be run in parallel
@@ -118,9 +102,6 @@ func TestOneToOne(t *testing.T) {}
 func TestToMany(t *testing.T) {
 	t.Run("CardToCard1Battles", testCardToManyCard1Battles)
 	t.Run("CardToCard2Battles", testCardToManyCard2Battles)
-	t.Run("CategoryToBattles", testCategoryToManyBattles)
-	t.Run("CategoryToCards", testCategoryToManyCards)
-	t.Run("CategoryToUserTokens", testCategoryToManyUserTokens)
 }
 
 // TestToOneSet tests cannot be run in parallel
@@ -128,9 +109,6 @@ func TestToMany(t *testing.T) {
 func TestToOneSet(t *testing.T) {
 	t.Run("BattleToCardUsingCard1Battles", testBattleToOneSetOpCardUsingCard1)
 	t.Run("BattleToCardUsingCard2Battles", testBattleToOneSetOpCardUsingCard2)
-	t.Run("BattleToCategoryUsingBattles", testBattleToOneSetOpCategoryUsingCategory)
-	t.Run("CardToCategoryUsingCards", testCardToOneSetOpCategoryUsingCategory)
-	t.Run("UserTokenToCategoryUsingUserTokens", testUserTokenToOneSetOpCategoryUsingCategory)
 }
 
 // TestToOneRemove tests cannot be run in parallel
@@ -150,9 +128,6 @@ func TestOneToOneRemove(t *testing.T) {}
 func TestToManyAdd(t *testing.T) {
 	t.Run("CardToCard1Battles", testCardToManyAddOpCard1Battles)
 	t.Run("CardToCard2Battles", testCardToManyAddOpCard2Battles)
-	t.Run("CategoryToBattles", testCategoryToManyAddOpBattles)
-	t.Run("CategoryToCards", testCategoryToManyAddOpCards)
-	t.Run("CategoryToUserTokens", testCategoryToManyAddOpUserTokens)
 }
 
 // TestToManySet tests cannot be run in parallel
@@ -166,34 +141,29 @@ func TestToManyRemove(t *testing.T) {}
 func TestReload(t *testing.T) {
 	t.Run("Battles", testBattlesReload)
 	t.Run("Cards", testCardsReload)
-	t.Run("Categories", testCategoriesReload)
 	t.Run("UserTokens", testUserTokensReload)
 }
 
 func TestReloadAll(t *testing.T) {
 	t.Run("Battles", testBattlesReloadAll)
 	t.Run("Cards", testCardsReloadAll)
-	t.Run("Categories", testCategoriesReloadAll)
 	t.Run("UserTokens", testUserTokensReloadAll)
 }
 
 func TestSelect(t *testing.T) {
 	t.Run("Battles", testBattlesSelect)
 	t.Run("Cards", testCardsSelect)
-	t.Run("Categories", testCategoriesSelect)
 	t.Run("UserTokens", testUserTokensSelect)
 }
 
 func TestUpdate(t *testing.T) {
 	t.Run("Battles", testBattlesUpdate)
 	t.Run("Cards", testCardsUpdate)
-	t.Run("Categories", testCategoriesUpdate)
 	t.Run("UserTokens", testUserTokensUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Battles", testBattlesSliceUpdateAll)
 	t.Run("Cards", testCardsSliceUpdateAll)
-	t.Run("Categories", testCategoriesSliceUpdateAll)
 	t.Run("UserTokens", testUserTokensSliceUpdateAll)
 }

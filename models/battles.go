@@ -24,47 +24,42 @@ import (
 
 // Battle is an object representing the database table.
 type Battle struct {
-	ID         int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Start      null.Time `boil:"start" json:"start,omitempty" toml:"start" yaml:"start,omitempty"`
-	Card1ID    int       `boil:"card1_id" json:"card1_id" toml:"card1_id" yaml:"card1_id"`
-	Card2ID    int       `boil:"card2_id" json:"card2_id" toml:"card2_id" yaml:"card2_id"`
-	Token      string    `boil:"token" json:"token" toml:"token" yaml:"token"`
-	CategoryID int       `boil:"category_id" json:"category_id" toml:"category_id" yaml:"category_id"`
+	ID      int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Start   null.Time `boil:"start" json:"start,omitempty" toml:"start" yaml:"start,omitempty"`
+	Card1ID int       `boil:"card1_id" json:"card1_id" toml:"card1_id" yaml:"card1_id"`
+	Card2ID int       `boil:"card2_id" json:"card2_id" toml:"card2_id" yaml:"card2_id"`
+	Token   string    `boil:"token" json:"token" toml:"token" yaml:"token"`
 
 	R *battleR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L battleL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var BattleColumns = struct {
-	ID         string
-	Start      string
-	Card1ID    string
-	Card2ID    string
-	Token      string
-	CategoryID string
+	ID      string
+	Start   string
+	Card1ID string
+	Card2ID string
+	Token   string
 }{
-	ID:         "id",
-	Start:      "start",
-	Card1ID:    "card1_id",
-	Card2ID:    "card2_id",
-	Token:      "token",
-	CategoryID: "category_id",
+	ID:      "id",
+	Start:   "start",
+	Card1ID: "card1_id",
+	Card2ID: "card2_id",
+	Token:   "token",
 }
 
 var BattleTableColumns = struct {
-	ID         string
-	Start      string
-	Card1ID    string
-	Card2ID    string
-	Token      string
-	CategoryID string
+	ID      string
+	Start   string
+	Card1ID string
+	Card2ID string
+	Token   string
 }{
-	ID:         "battles.id",
-	Start:      "battles.start",
-	Card1ID:    "battles.card1_id",
-	Card2ID:    "battles.card2_id",
-	Token:      "battles.token",
-	CategoryID: "battles.category_id",
+	ID:      "battles.id",
+	Start:   "battles.start",
+	Card1ID: "battles.card1_id",
+	Card2ID: "battles.card2_id",
+	Token:   "battles.token",
 }
 
 // Generated where
@@ -144,37 +139,32 @@ func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
 }
 
 var BattleWhere = struct {
-	ID         whereHelperint
-	Start      whereHelpernull_Time
-	Card1ID    whereHelperint
-	Card2ID    whereHelperint
-	Token      whereHelperstring
-	CategoryID whereHelperint
+	ID      whereHelperint
+	Start   whereHelpernull_Time
+	Card1ID whereHelperint
+	Card2ID whereHelperint
+	Token   whereHelperstring
 }{
-	ID:         whereHelperint{field: "\"battles\".\"id\""},
-	Start:      whereHelpernull_Time{field: "\"battles\".\"start\""},
-	Card1ID:    whereHelperint{field: "\"battles\".\"card1_id\""},
-	Card2ID:    whereHelperint{field: "\"battles\".\"card2_id\""},
-	Token:      whereHelperstring{field: "\"battles\".\"token\""},
-	CategoryID: whereHelperint{field: "\"battles\".\"category_id\""},
+	ID:      whereHelperint{field: "\"battles\".\"id\""},
+	Start:   whereHelpernull_Time{field: "\"battles\".\"start\""},
+	Card1ID: whereHelperint{field: "\"battles\".\"card1_id\""},
+	Card2ID: whereHelperint{field: "\"battles\".\"card2_id\""},
+	Token:   whereHelperstring{field: "\"battles\".\"token\""},
 }
 
 // BattleRels is where relationship names are stored.
 var BattleRels = struct {
-	Card1    string
-	Card2    string
-	Category string
+	Card1 string
+	Card2 string
 }{
-	Card1:    "Card1",
-	Card2:    "Card2",
-	Category: "Category",
+	Card1: "Card1",
+	Card2: "Card2",
 }
 
 // battleR is where relationships are stored.
 type battleR struct {
-	Card1    *Card     `boil:"Card1" json:"Card1" toml:"Card1" yaml:"Card1"`
-	Card2    *Card     `boil:"Card2" json:"Card2" toml:"Card2" yaml:"Card2"`
-	Category *Category `boil:"Category" json:"Category" toml:"Category" yaml:"Category"`
+	Card1 *Card `boil:"Card1" json:"Card1" toml:"Card1" yaml:"Card1"`
+	Card2 *Card `boil:"Card2" json:"Card2" toml:"Card2" yaml:"Card2"`
 }
 
 // NewStruct creates a new relationship struct
@@ -196,19 +186,12 @@ func (r *battleR) GetCard2() *Card {
 	return r.Card2
 }
 
-func (r *battleR) GetCategory() *Category {
-	if r == nil {
-		return nil
-	}
-	return r.Category
-}
-
 // battleL is where Load methods for each relationship are stored.
 type battleL struct{}
 
 var (
-	battleAllColumns            = []string{"id", "start", "card1_id", "card2_id", "token", "category_id"}
-	battleColumnsWithoutDefault = []string{"card1_id", "card2_id", "token", "category_id"}
+	battleAllColumns            = []string{"id", "start", "card1_id", "card2_id", "token"}
+	battleColumnsWithoutDefault = []string{"card1_id", "card2_id", "token"}
 	battleColumnsWithDefault    = []string{"id", "start"}
 	battlePrimaryKeyColumns     = []string{"id"}
 	battleGeneratedColumns      = []string{}
@@ -514,17 +497,6 @@ func (o *Battle) Card2(mods ...qm.QueryMod) cardQuery {
 	return Cards(queryMods...)
 }
 
-// Category pointed to by the foreign key.
-func (o *Battle) Category(mods ...qm.QueryMod) categoryQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.CategoryID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Categories(queryMods...)
-}
-
 // LoadCard1 allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (battleL) LoadCard1(ctx context.Context, e boil.ContextExecutor, singular bool, maybeBattle interface{}, mods queries.Applicator) error {
@@ -765,126 +737,6 @@ func (battleL) LoadCard2(ctx context.Context, e boil.ContextExecutor, singular b
 	return nil
 }
 
-// LoadCategory allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (battleL) LoadCategory(ctx context.Context, e boil.ContextExecutor, singular bool, maybeBattle interface{}, mods queries.Applicator) error {
-	var slice []*Battle
-	var object *Battle
-
-	if singular {
-		var ok bool
-		object, ok = maybeBattle.(*Battle)
-		if !ok {
-			object = new(Battle)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeBattle)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeBattle))
-			}
-		}
-	} else {
-		s, ok := maybeBattle.(*[]*Battle)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeBattle)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeBattle))
-			}
-		}
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &battleR{}
-		}
-		args = append(args, object.CategoryID)
-
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &battleR{}
-			}
-
-			for _, a := range args {
-				if a == obj.CategoryID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.CategoryID)
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`categories`),
-		qm.WhereIn(`categories.id in ?`, args...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load Category")
-	}
-
-	var resultSlice []*Category
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Category")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for categories")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for categories")
-	}
-
-	if len(categoryAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.Category = foreign
-		if foreign.R == nil {
-			foreign.R = &categoryR{}
-		}
-		foreign.R.Battles = append(foreign.R.Battles, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.CategoryID == foreign.ID {
-				local.R.Category = foreign
-				if foreign.R == nil {
-					foreign.R = &categoryR{}
-				}
-				foreign.R.Battles = append(foreign.R.Battles, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
 // SetCard1 of the battle to the related item.
 // Sets o.R.Card1 to related.
 // Adds o to related.R.Card1Battles.
@@ -974,53 +826,6 @@ func (o *Battle) SetCard2(ctx context.Context, exec boil.ContextExecutor, insert
 		}
 	} else {
 		related.R.Card2Battles = append(related.R.Card2Battles, o)
-	}
-
-	return nil
-}
-
-// SetCategory of the battle to the related item.
-// Sets o.R.Category to related.
-// Adds o to related.R.Battles.
-func (o *Battle) SetCategory(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Category) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"battles\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"category_id"}),
-		strmangle.WhereClause("\"", "\"", 2, battlePrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.CategoryID = related.ID
-	if o.R == nil {
-		o.R = &battleR{
-			Category: related,
-		}
-	} else {
-		o.R.Category = related
-	}
-
-	if related.R == nil {
-		related.R = &categoryR{
-			Battles: BattleSlice{o},
-		}
-	} else {
-		related.R.Battles = append(related.R.Battles, o)
 	}
 
 	return nil

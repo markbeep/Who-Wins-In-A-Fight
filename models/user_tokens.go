@@ -23,56 +23,45 @@ import (
 
 // UserToken is an object representing the database table.
 type UserToken struct {
-	ID         int    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Token      string `boil:"token" json:"token" toml:"token" yaml:"token"`
-	CategoryID int    `boil:"category_id" json:"category_id" toml:"category_id" yaml:"category_id"`
+	ID    int    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Token string `boil:"token" json:"token" toml:"token" yaml:"token"`
 
 	R *userTokenR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userTokenL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserTokenColumns = struct {
-	ID         string
-	Token      string
-	CategoryID string
+	ID    string
+	Token string
 }{
-	ID:         "id",
-	Token:      "token",
-	CategoryID: "category_id",
+	ID:    "id",
+	Token: "token",
 }
 
 var UserTokenTableColumns = struct {
-	ID         string
-	Token      string
-	CategoryID string
+	ID    string
+	Token string
 }{
-	ID:         "user_tokens.id",
-	Token:      "user_tokens.token",
-	CategoryID: "user_tokens.category_id",
+	ID:    "user_tokens.id",
+	Token: "user_tokens.token",
 }
 
 // Generated where
 
 var UserTokenWhere = struct {
-	ID         whereHelperint
-	Token      whereHelperstring
-	CategoryID whereHelperint
+	ID    whereHelperint
+	Token whereHelperstring
 }{
-	ID:         whereHelperint{field: "\"user_tokens\".\"id\""},
-	Token:      whereHelperstring{field: "\"user_tokens\".\"token\""},
-	CategoryID: whereHelperint{field: "\"user_tokens\".\"category_id\""},
+	ID:    whereHelperint{field: "\"user_tokens\".\"id\""},
+	Token: whereHelperstring{field: "\"user_tokens\".\"token\""},
 }
 
 // UserTokenRels is where relationship names are stored.
 var UserTokenRels = struct {
-	Category string
-}{
-	Category: "Category",
-}
+}{}
 
 // userTokenR is where relationships are stored.
 type userTokenR struct {
-	Category *Category `boil:"Category" json:"Category" toml:"Category" yaml:"Category"`
 }
 
 // NewStruct creates a new relationship struct
@@ -80,19 +69,12 @@ func (*userTokenR) NewStruct() *userTokenR {
 	return &userTokenR{}
 }
 
-func (r *userTokenR) GetCategory() *Category {
-	if r == nil {
-		return nil
-	}
-	return r.Category
-}
-
 // userTokenL is where Load methods for each relationship are stored.
 type userTokenL struct{}
 
 var (
-	userTokenAllColumns            = []string{"id", "token", "category_id"}
-	userTokenColumnsWithoutDefault = []string{"token", "category_id"}
+	userTokenAllColumns            = []string{"id", "token"}
+	userTokenColumnsWithoutDefault = []string{"token"}
 	userTokenColumnsWithDefault    = []string{"id"}
 	userTokenPrimaryKeyColumns     = []string{"id"}
 	userTokenGeneratedColumns      = []string{}
@@ -374,184 +356,6 @@ func (q userTokenQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 	}
 
 	return count > 0, nil
-}
-
-// Category pointed to by the foreign key.
-func (o *UserToken) Category(mods ...qm.QueryMod) categoryQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.CategoryID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Categories(queryMods...)
-}
-
-// LoadCategory allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (userTokenL) LoadCategory(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUserToken interface{}, mods queries.Applicator) error {
-	var slice []*UserToken
-	var object *UserToken
-
-	if singular {
-		var ok bool
-		object, ok = maybeUserToken.(*UserToken)
-		if !ok {
-			object = new(UserToken)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeUserToken)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUserToken))
-			}
-		}
-	} else {
-		s, ok := maybeUserToken.(*[]*UserToken)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeUserToken)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUserToken))
-			}
-		}
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &userTokenR{}
-		}
-		args = append(args, object.CategoryID)
-
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userTokenR{}
-			}
-
-			for _, a := range args {
-				if a == obj.CategoryID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.CategoryID)
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`categories`),
-		qm.WhereIn(`categories.id in ?`, args...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load Category")
-	}
-
-	var resultSlice []*Category
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Category")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for categories")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for categories")
-	}
-
-	if len(categoryAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.Category = foreign
-		if foreign.R == nil {
-			foreign.R = &categoryR{}
-		}
-		foreign.R.UserTokens = append(foreign.R.UserTokens, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.CategoryID == foreign.ID {
-				local.R.Category = foreign
-				if foreign.R == nil {
-					foreign.R = &categoryR{}
-				}
-				foreign.R.UserTokens = append(foreign.R.UserTokens, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// SetCategory of the userToken to the related item.
-// Sets o.R.Category to related.
-// Adds o to related.R.UserTokens.
-func (o *UserToken) SetCategory(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Category) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"user_tokens\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"category_id"}),
-		strmangle.WhereClause("\"", "\"", 2, userTokenPrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.CategoryID = related.ID
-	if o.R == nil {
-		o.R = &userTokenR{
-			Category: related,
-		}
-	} else {
-		o.R.Category = related
-	}
-
-	if related.R == nil {
-		related.R = &categoryR{
-			UserTokens: UserTokenSlice{o},
-		}
-	} else {
-		related.R.UserTokens = append(related.R.UserTokens, o)
-	}
-
-	return nil
 }
 
 // UserTokens retrieves all the records using an executor.

@@ -10,7 +10,5 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Cards", testCardsUpsert)
 
-	t.Run("Categories", testCategoriesUpsert)
-
 	t.Run("UserTokens", testUserTokensUpsert)
 }

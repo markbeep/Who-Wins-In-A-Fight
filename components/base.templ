@@ -29,18 +29,18 @@ templ Base(title, description string) {
         </p>
         <![endif]-->
 			<div class="dark:bg-black dark:text-white">
-				@Navbar()
-				<main class="w-full h-[calc(100vh-5rem)]">
+				<div class="w-full h-full pt-8">
 					{ children... }
-				</main>
+					@Navbar()
+				</div>
 			</div>
 		</body>
 	</html>
 }
 
 templ Navbar() {
-	<nav class="h-20 flex gap-3 p-5" hx-boost="true" preload="preload:init">
-		<a class="p-2 border border-white hover:bg-gray-800" href="/">Home</a>
-		<a class="p-2 border border-white hover:bg-gray-800" href="/create">Create</a>
+	<nav class="flex justify-center gap-3 p-5" hx-boost="true" preload="preload:init">
+		<a href="/">Home</a>
+		<a href="/suggest">Create</a>
 	</nav>
 }

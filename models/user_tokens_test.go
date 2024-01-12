@@ -494,125 +494,6 @@ func testUserTokensInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testUserTokenToOneCategoryUsingCategory(t *testing.T) {
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var local UserToken
-	var foreign Category
-
-	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, userTokenDBTypes, false, userTokenColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize UserToken struct: %s", err)
-	}
-	if err := randomize.Struct(seed, &foreign, categoryDBTypes, false, categoryColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Category struct: %s", err)
-	}
-
-	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	local.CategoryID = foreign.ID
-	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := local.Category().One(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if check.ID != foreign.ID {
-		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
-	}
-
-	ranAfterSelectHook := false
-	AddCategoryHook(boil.AfterSelectHook, func(ctx context.Context, e boil.ContextExecutor, o *Category) error {
-		ranAfterSelectHook = true
-		return nil
-	})
-
-	slice := UserTokenSlice{&local}
-	if err = local.L.LoadCategory(ctx, tx, false, (*[]*UserToken)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.Category == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	local.R.Category = nil
-	if err = local.L.LoadCategory(ctx, tx, true, &local, nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.Category == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	if !ranAfterSelectHook {
-		t.Error("failed to run AfterSelect hook for relationship")
-	}
-}
-
-func testUserTokenToOneSetOpCategoryUsingCategory(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a UserToken
-	var b, c Category
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, userTokenDBTypes, false, strmangle.SetComplement(userTokenPrimaryKeyColumns, userTokenColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &b, categoryDBTypes, false, strmangle.SetComplement(categoryPrimaryKeyColumns, categoryColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, categoryDBTypes, false, strmangle.SetComplement(categoryPrimaryKeyColumns, categoryColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	for i, x := range []*Category{&b, &c} {
-		err = a.SetCategory(ctx, tx, i != 0, x)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if a.R.Category != x {
-			t.Error("relationship struct not set to correct value")
-		}
-
-		if x.R.UserTokens[0] != &a {
-			t.Error("failed to append to foreign relationship struct")
-		}
-		if a.CategoryID != x.ID {
-			t.Error("foreign key was wrong value", a.CategoryID)
-		}
-
-		zero := reflect.Zero(reflect.TypeOf(a.CategoryID))
-		reflect.Indirect(reflect.ValueOf(&a.CategoryID)).Set(zero)
-
-		if err = a.Reload(ctx, tx); err != nil {
-			t.Fatal("failed to reload", err)
-		}
-
-		if a.CategoryID != x.ID {
-			t.Error("foreign key was wrong value", a.CategoryID, x.ID)
-		}
-	}
-}
-
 func testUserTokensReload(t *testing.T) {
 	t.Parallel()
 
@@ -687,7 +568,7 @@ func testUserTokensSelect(t *testing.T) {
 }
 
 var (
-	userTokenDBTypes = map[string]string{`ID`: `integer`, `Token`: `text`, `CategoryID`: `integer`}
+	userTokenDBTypes = map[string]string{`ID`: `integer`, `Token`: `text`}
 	_                = bytes.MinRead
 )
 

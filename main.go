@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compare/components"
 	storage "compare/internal"
 	"compare/internal/category"
 	"flag"
@@ -9,11 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
-	"sync"
 
-	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/httplog"
 	"github.com/sirupsen/logrus"
@@ -37,42 +33,26 @@ var (
 	imageSaveDir = flag.String("image-dir", os.Getenv("IMAGE_SAVE_DIR"), "directory to store images in (default: ./data/imgs)")
 )
 
-// TODO: store in db
-var categories = []storage.Category{
-	{
-		Token: "123", // TODO: this should be a token stored in the db and regeneratable (incase of leak)
-		Title: "Who's stronger?",
-		AllCards: map[int]*storage.BattleCard{
-			0: {Url: "/static/chuck.png", ID: 0, Name: "Chuck Norris"},
-			1: {Url: "/static/superman.jpg", ID: 1, Name: "Superman"},
-			2: {Url: "/static/kermit.jpeg", ID: 2, Name: "Kermit the Gangsta Frog"}},
-		AllCardsMutex: sync.RWMutex{},
-		// TODO: Fill this db with relevant battles from the db on startup
-		ActiveBattles:      map[string]storage.Battle{},
-		ActiveBattlesMutex: sync.RWMutex{},
-	},
-}
-
 func main() {
 	// Handle envs
 	flag.Parse()
 	if *port == "" {
 		*port = "3000"
 	}
-	createConfig := category.CreateRouteConfig{
-		MaxMemory:    32 << 20, // 32MB
-		ImageSaveDir: "./data/imgs",
-	}
-	if *maxFileSize != "" {
-		val, err := strconv.ParseInt(*maxFileSize, 10, 64)
-		if err != nil {
-			panic(fmt.Sprintf("maxFileSize is not an int: err = %s", err))
-		}
-		createConfig.MaxMemory = val
-	}
-	if *imageSaveDir != "" {
-		createConfig.ImageSaveDir = *imageSaveDir
-	}
+	// createConfig := category.CreateRouteConfig{
+	// 	MaxMemory:    32 << 20, // 32MB
+	// 	ImageSaveDir: "./data/imgs",
+	// }
+	// if *maxFileSize != "" {
+	// 	val, err := strconv.ParseInt(*maxFileSize, 10, 64)
+	// 	if err != nil {
+	// 		panic(fmt.Sprintf("maxFileSize is not an int: err = %s", err))
+	// 	}
+	// 	createConfig.MaxMemory = val
+	// }
+	// if *imageSaveDir != "" {
+	// 	createConfig.ImageSaveDir = *imageSaveDir
+	// }
 
 	// TODO: involve the logger more
 	logger := logrus.New()
@@ -100,14 +80,10 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(MiddlewareLogging)
 
-	r.Get("/", templ.Handler(components.Index()).ServeHTTP)
+	r.Get("/", category.BattleGET(db))
+	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })
 	r.Get("/static/*", Static)
-	for i := range categories {
-		c := &categories[i]
-		r.Mount("/category/"+c.Token, category.CategoryRouter(c))
-	}
-	r.Mount("/create", category.CreateRoute(db, &createConfig))
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)
