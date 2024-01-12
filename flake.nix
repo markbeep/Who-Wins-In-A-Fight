@@ -20,7 +20,7 @@
           compare = pkgs.buildGo121Module {
             name = "compare";
             src = gitignore.lib.gitignoreSource ./.;
-            vendorHash = "sha256-3DWRPfwf3GMwde/4g1eP2c3bgAgCGb8dEdP4LpumLms=";
+            vendorHash = "sha256-umEYXZr9GL5GRsWgWY+uiHuRNuDYtXvRpKNTBPjYcR0=";
 
             preBuild = ''
               ${templ-pkg}/bin/templ generate
@@ -37,6 +37,7 @@
               nodejs_20
               templ-pkg
               lsof
+              sqlboiler
           ];
         };
       }

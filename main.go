@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -30,6 +31,10 @@ var (
 	dbName     = flag.String("db-name", os.Getenv("POSTGRES_DB"), "name of the database")
 	dbPort     = flag.String("db-port", os.Getenv("POSTGRES_DB_PORT"), "port of the database")
 	dbHost     = flag.String("db-host", os.Getenv("POSTGRES_DB_SERVER"), "host of the database")
+
+	// Creation envs
+	maxFileSize  = flag.String("max-filesize", os.Getenv("MAX_FILESIZE"), "maximum filesize to store in memory (default: 32MB)")
+	imageSaveDir = flag.String("image-dir", os.Getenv("IMAGE_SAVE_DIR"), "directory to store images in (default: ./data/imgs)")
 )
 
 // TODO: store in db
@@ -49,9 +54,24 @@ var categories = []storage.Category{
 }
 
 func main() {
+	// Handle envs
 	flag.Parse()
 	if *port == "" {
 		*port = "3000"
+	}
+	createConfig := category.CreateRouteConfig{
+		MaxMemory:    32 << 20, // 32MB
+		ImageSaveDir: "./data/imgs",
+	}
+	if *maxFileSize != "" {
+		val, err := strconv.ParseInt(*maxFileSize, 10, 64)
+		if err != nil {
+			panic(fmt.Sprintf("maxFileSize is not an int: err = %s", err))
+		}
+		createConfig.MaxMemory = val
+	}
+	if *imageSaveDir != "" {
+		createConfig.ImageSaveDir = *imageSaveDir
 	}
 
 	// TODO: involve the logger more
@@ -85,9 +105,9 @@ func main() {
 	r.Get("/static/*", Static)
 	for i := range categories {
 		c := &categories[i]
-		r.Mount("/"+c.Token, category.CategoryRouter(c))
+		r.Mount("/category/"+c.Token, category.CategoryRouter(c))
 	}
-	r.Mount("/create", category.CreateRoute())
+	r.Mount("/create", category.CreateRoute(db, &createConfig))
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)

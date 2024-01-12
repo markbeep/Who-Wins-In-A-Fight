@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Rebuilds the application everytime a change is made
-# to a file
+# Rebuilds and runs the application
+# everytime a change is made to a 
+# .go or .templ file
 
 last_run_time=0
 process_id=0

@@ -7,13 +7,14 @@ templ CreateIndex() {
 				class="flex flex-col [&>*]:w-full max-w-[40rem] w-3/4 mx-10"
 				hx-post="/create"
 				hx-target="body"
+				hx-encoding="multipart/form-data"
 			>
 				<p>Main Question</p>
 				<input class="p-1 border border-white bg-black" name="title" placeholder="Who is stronger?"/>
 				<p class="mt-2">Description</p>
 				<textarea class="p-1 border border-white bg-black" name="description" placeholder="This is a battle for deciding..."></textarea>
 				<p class="mt-2">Upload Images</p>
-				<input class="p-1 border border-white bg-black" type="file" id="img" name="img" multiple="" accept="image/*"/>
+				<input class="p-1 border border-white bg-black" type="file" id="img" name="images" multiple="multiple" accept="image/*"/>
 				<button class="p-2 border border-white bg-black mt-4 hover:bg-gray-800" type="submit">Create!</button>
 			</form>
 		</div>
