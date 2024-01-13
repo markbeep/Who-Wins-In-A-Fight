@@ -5,9 +5,7 @@ templ AdminTokenIndex() {
 		<div class="w-full flex flex-col items-center">
 			<form
 				class="flex flex-col [&>*]:w-full max-w-[40rem] w-3/4 mx-10"
-				hx-post="/edit"
-				hx-target="body"
-				hx-encoding="multipart/form-data"
+				hx-post="/admin"
 			>
 				<p>Enter admin token</p>
 				<input class="p-1 border border-white bg-black" name="token"/>

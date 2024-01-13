@@ -1,8 +1,8 @@
 package main
 
 import (
-	storage "compare/internal"
 	"compare/internal/category"
+	"compare/internal/storage"
 	"flag"
 	"fmt"
 	"log"
@@ -87,6 +87,9 @@ func main() {
 	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
 	r.Get("/suggest", category.SuggestGET)
 	r.Post("/suggest", category.SuggestPOST(db, &createConfig))
+	r.Get("/admin", category.AdminGET)
+	r.Post("/admin", category.AdminPOST(db))
+	r.Get("/admin/{token:[\\w-]+}", category.AdminTokenGET(db))
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)

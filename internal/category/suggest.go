@@ -2,6 +2,7 @@ package category
 
 import (
 	"compare/components"
+	"compare/internal"
 	"compare/models"
 	"database/sql"
 	"fmt"
@@ -69,7 +70,7 @@ func SuggestPOST(db *sql.DB, c *CreateRouteConfig) func(w http.ResponseWriter, r
 
 		var imageToken string
 		for {
-			imageToken, err = GenerateToken(10)
+			imageToken, err = internal.GenerateToken(10)
 			if err != nil {
 				tx.Rollback()
 				http.Error(w, fmt.Sprintf("failed to generate image token. err = %s", err), http.StatusInternalServerError)
