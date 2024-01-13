@@ -23,52 +23,52 @@ import (
 
 // Card is an object representing the database table.
 type Card struct {
-	ID      int    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Wins    int    `boil:"wins" json:"wins" toml:"wins" yaml:"wins"`
-	Battles int    `boil:"battles" json:"battles" toml:"battles" yaml:"battles"`
-	Elo     int    `boil:"elo" json:"elo" toml:"elo" yaml:"elo"`
-	Name    string `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Path    string `boil:"path" json:"path" toml:"path" yaml:"path"`
-	Islocal bool   `boil:"islocal" json:"islocal" toml:"islocal" yaml:"islocal"`
+	ID       int    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Wins     int    `boil:"wins" json:"wins" toml:"wins" yaml:"wins"`
+	Battles  int    `boil:"battles" json:"battles" toml:"battles" yaml:"battles"`
+	Name     string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Token    string `boil:"token" json:"token" toml:"token" yaml:"token"`
+	Filename string `boil:"filename" json:"filename" toml:"filename" yaml:"filename"`
+	Accepted bool   `boil:"accepted" json:"accepted" toml:"accepted" yaml:"accepted"`
 
 	R *cardR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L cardL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var CardColumns = struct {
-	ID      string
-	Wins    string
-	Battles string
-	Elo     string
-	Name    string
-	Path    string
-	Islocal string
+	ID       string
+	Wins     string
+	Battles  string
+	Name     string
+	Token    string
+	Filename string
+	Accepted string
 }{
-	ID:      "id",
-	Wins:    "wins",
-	Battles: "battles",
-	Elo:     "elo",
-	Name:    "name",
-	Path:    "path",
-	Islocal: "islocal",
+	ID:       "id",
+	Wins:     "wins",
+	Battles:  "battles",
+	Name:     "name",
+	Token:    "token",
+	Filename: "filename",
+	Accepted: "accepted",
 }
 
 var CardTableColumns = struct {
-	ID      string
-	Wins    string
-	Battles string
-	Elo     string
-	Name    string
-	Path    string
-	Islocal string
+	ID       string
+	Wins     string
+	Battles  string
+	Name     string
+	Token    string
+	Filename string
+	Accepted string
 }{
-	ID:      "cards.id",
-	Wins:    "cards.wins",
-	Battles: "cards.battles",
-	Elo:     "cards.elo",
-	Name:    "cards.name",
-	Path:    "cards.path",
-	Islocal: "cards.islocal",
+	ID:       "cards.id",
+	Wins:     "cards.wins",
+	Battles:  "cards.battles",
+	Name:     "cards.name",
+	Token:    "cards.token",
+	Filename: "cards.filename",
+	Accepted: "cards.accepted",
 }
 
 // Generated where
@@ -83,21 +83,21 @@ func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field
 func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 var CardWhere = struct {
-	ID      whereHelperint
-	Wins    whereHelperint
-	Battles whereHelperint
-	Elo     whereHelperint
-	Name    whereHelperstring
-	Path    whereHelperstring
-	Islocal whereHelperbool
+	ID       whereHelperint
+	Wins     whereHelperint
+	Battles  whereHelperint
+	Name     whereHelperstring
+	Token    whereHelperstring
+	Filename whereHelperstring
+	Accepted whereHelperbool
 }{
-	ID:      whereHelperint{field: "\"cards\".\"id\""},
-	Wins:    whereHelperint{field: "\"cards\".\"wins\""},
-	Battles: whereHelperint{field: "\"cards\".\"battles\""},
-	Elo:     whereHelperint{field: "\"cards\".\"elo\""},
-	Name:    whereHelperstring{field: "\"cards\".\"name\""},
-	Path:    whereHelperstring{field: "\"cards\".\"path\""},
-	Islocal: whereHelperbool{field: "\"cards\".\"islocal\""},
+	ID:       whereHelperint{field: "\"cards\".\"id\""},
+	Wins:     whereHelperint{field: "\"cards\".\"wins\""},
+	Battles:  whereHelperint{field: "\"cards\".\"battles\""},
+	Name:     whereHelperstring{field: "\"cards\".\"name\""},
+	Token:    whereHelperstring{field: "\"cards\".\"token\""},
+	Filename: whereHelperstring{field: "\"cards\".\"filename\""},
+	Accepted: whereHelperbool{field: "\"cards\".\"accepted\""},
 }
 
 // CardRels is where relationship names are stored.
@@ -138,9 +138,9 @@ func (r *cardR) GetCard2Battles() BattleSlice {
 type cardL struct{}
 
 var (
-	cardAllColumns            = []string{"id", "wins", "battles", "elo", "name", "path", "islocal"}
-	cardColumnsWithoutDefault = []string{"name", "path", "islocal"}
-	cardColumnsWithDefault    = []string{"id", "wins", "battles", "elo"}
+	cardAllColumns            = []string{"id", "wins", "battles", "name", "token", "filename", "accepted"}
+	cardColumnsWithoutDefault = []string{"name", "token", "filename"}
+	cardColumnsWithDefault    = []string{"id", "wins", "battles", "accepted"}
 	cardPrimaryKeyColumns     = []string{"id"}
 	cardGeneratedColumns      = []string{}
 )

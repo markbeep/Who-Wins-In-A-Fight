@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -39,20 +40,20 @@ func main() {
 	if *port == "" {
 		*port = "3000"
 	}
-	// createConfig := category.CreateRouteConfig{
-	// 	MaxMemory:    32 << 20, // 32MB
-	// 	ImageSaveDir: "./data/imgs",
-	// }
-	// if *maxFileSize != "" {
-	// 	val, err := strconv.ParseInt(*maxFileSize, 10, 64)
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("maxFileSize is not an int: err = %s", err))
-	// 	}
-	// 	createConfig.MaxMemory = val
-	// }
-	// if *imageSaveDir != "" {
-	// 	createConfig.ImageSaveDir = *imageSaveDir
-	// }
+	createConfig := category.CreateRouteConfig{
+		MaxMemory:    32 << 20, // 32MB
+		ImageSaveDir: "./static/imgs",
+	}
+	if *maxFileSize != "" {
+		val, err := strconv.ParseInt(*maxFileSize, 10, 64)
+		if err != nil {
+			panic(fmt.Sprintf("maxFileSize is not an int: err = %s", err))
+		}
+		createConfig.MaxMemory = val
+	}
+	if *imageSaveDir != "" {
+		createConfig.ImageSaveDir = *imageSaveDir
+	}
 
 	// TODO: involve the logger more
 	logger := logrus.New()
@@ -81,9 +82,11 @@ func main() {
 	r.Use(MiddlewareLogging)
 
 	r.Get("/", category.BattleGET(db))
-	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })
 	r.Get("/static/*", Static)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })
+	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
+	r.Get("/suggest", category.SuggestGET)
+	r.Post("/suggest", category.SuggestPOST(db, &createConfig))
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)

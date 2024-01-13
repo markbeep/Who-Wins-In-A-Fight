@@ -46,7 +46,7 @@ templ Card(card models.Card, token string, index int) {
 		<div
 			class="hover:brightness-125"
 		>
-			<img src={ card.Path } class="object-cover w-[40vw] max-w-[40vh] h-[60vw] max-h-[60vh] rounded-md"/>
+			<img src={ fmt.Sprintf("/static/imgs/%s", card.Filename) } class="object-cover w-[40vw] max-w-[40vh] h-[60vw] max-h-[60vh] rounded-md"/>
 		</div>
 		<p class="text-white w-[40vw] max-w-[40vh]">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
 		<p class="text-clip mb-1 text-xl md:text-3xl w-[40vw] max-w-[40vh] text-center overflow-clip h-10">{ card.Name }</p>

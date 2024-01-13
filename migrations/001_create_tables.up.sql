@@ -2,10 +2,10 @@ CREATE TABLE IF NOT EXISTS cards (
     id SERIAL PRIMARY KEY,
     wins INT NOT NULL DEFAULT 0,
     battles INT NOT NULL DEFAULT 0,
-    elo INT NOT NULL DEFAULT 1000,
     name TEXT NOT NULL,
-    path TEXT NOT NULL,
-    isLocal BOOLEAN NOT NULL
+    token TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    accepted BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS battles (
