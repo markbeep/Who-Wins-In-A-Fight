@@ -132,7 +132,7 @@ templ EditCard(token string, c models.Card, isReview bool) {
 		<div class="p-6 flex flex-col items-center space-y-2">
 			<img
 				src={ fmt.Sprintf("/static/imgs/%s", c.Filename) }
-				class="object-cover aspect-square w-full rounded-lg max-w-64"
+				class="object-cover aspect-square w-full rounded-lg max-w-64 object-top"
 			/>
 			if isReview {
 				<form

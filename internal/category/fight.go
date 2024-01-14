@@ -26,6 +26,7 @@ var cacheMutex = sync.RWMutex{}
 
 func getRandomBattle(ctx context.Context, db *sql.DB) (*internal.Battle, error) {
 	card1, err := models.Cards(
+		qm.Where(fmt.Sprintf("%s = true", models.CardColumns.Accepted)),
 		qm.OrderBy("RANDOM()"),
 	).One(ctx, db)
 	if err != nil {
@@ -33,7 +34,7 @@ func getRandomBattle(ctx context.Context, db *sql.DB) (*internal.Battle, error) 
 	}
 
 	card2, err := models.Cards(
-		qm.Where(fmt.Sprintf("%s != ?", models.CardColumns.ID), card1.ID),
+		qm.Where(fmt.Sprintf("%s != ? AND %s = true", models.CardColumns.ID, models.CardColumns.Accepted), card1.ID),
 		qm.OrderBy("RANDOM()"),
 	).One(ctx, db)
 	if err != nil {

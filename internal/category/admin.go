@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -260,12 +261,11 @@ func CardDELETE(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		// delete file locally
+		// delete file locally. Ignore if something fails
 		path := path.Join(imageSaveDir, card.Filename)
 		err = os.Remove(path)
-		if err != nil && err != os.ErrNotExist {
-			http.Error(w, fmt.Sprintf("unable to delete image. err = %s", err), http.StatusInternalServerError)
-			return
+		if err != nil {
+			log.Printf("unable to delete file. err = %s", err)
 		}
 
 		var count int64
