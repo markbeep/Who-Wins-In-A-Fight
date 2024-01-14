@@ -69,8 +69,6 @@ func getRandomBattle(ctx context.Context, db *sql.DB) (*models.Battle, error) {
 
 func BattleGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
 		battle, err := getRandomBattle(r.Context(), db)
 		if err == sql.ErrNoRows {
 			templ.Handler(components.Index(nil, DEBUG)).ServeHTTP(w, r)
@@ -81,8 +79,6 @@ func BattleGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		templ.Handler(components.Index(battle, DEBUG)).ServeHTTP(w, r)
-
-		log.Println("TIME TAKEN", time.Now().Sub(start))
 	}
 }
 

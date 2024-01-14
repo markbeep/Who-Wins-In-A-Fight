@@ -62,12 +62,13 @@ templ Button(text string) {
 	@ColoredButton(text, "text-black hover:bg-white/90 bg-white")
 }
 
-templ Input(name, placeholder, extraClass string) {
+templ Input(name, placeholder, extraClass, defaultValue string) {
 	<input
 		class={ fmt.Sprintf(`flex h-10 w-full rounded-md border border-input dark:bg-black px-3 py-2 text-sm ring-offset-black
 					placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
 					disabled:cursor-not-allowed disabled:opacity-50 %s`, extraClass) }
 		name={ name }
+		value={ defaultValue }
 		placeholder={ placeholder }
 	/>
 }

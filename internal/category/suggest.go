@@ -11,56 +11,81 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"slices"
+	"strings"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
 type CreateRouteConfig struct {
-	MaxMemory      int64  // max memory amount uploaded files will take up in memory
-	ImageSaveDir   string // directory to save images in
-	ImageOnlineDir string // path to access files online
+	MaxMemory         int64  // max memory amount uploaded files will take up in memory
+	ImageSaveDir      string // directory to save images in
+	ImageOnlineDir    string // path to access files online
+	AllowedExtensions []string
 }
 
-func SuggestGET(w http.ResponseWriter, r *http.Request) {
-	templ.Handler(components.SuggestIndex(false, false)).ServeHTTP(w, r)
-}
+var maxMemory int64 = 10 << 20
+var imageSaveDir = "./data/imgs"
+var fileExtensions []string = []string{}
 
-func SuggestPOST(db *sql.DB, c *CreateRouteConfig) func(w http.ResponseWriter, r *http.Request) {
-	var maxMemory int64 = 32 << 20 // 32MB
-	imageSaveDir := "./data/imgs"
+func SuggestRoute(db *sql.DB, c *CreateRouteConfig) func(r chi.Router) {
 	if c != nil {
 		maxMemory = c.MaxMemory
 		imageSaveDir = c.ImageSaveDir
+		fileExtensions = c.AllowedExtensions
 	}
 	err := os.MkdirAll(imageSaveDir, 0755)
 	if err != nil {
 		log.Fatalf("failed to create image directory. err = %s", err)
 	}
 
+	return func(r chi.Router) {
+		r.Get("/", SuggestGET)
+		r.Post("/", SuggestPOST(db))
+	}
+}
+
+func SuggestGET(w http.ResponseWriter, r *http.Request) {
+	templ.Handler(components.SuggestIndex(false, false, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
+}
+
+func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(maxMemory)
 		if err != nil {
-			templ.Handler(components.SuggestForm(true, true)).ServeHTTP(w, r)
+			templ.Handler(components.SuggestForm(true, true, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 			return
 		}
 
 		name := r.PostFormValue("name")
 		if len(name) == 0 {
-			templ.Handler(components.SuggestForm(true, false)).ServeHTTP(w, r)
+			templ.Handler(components.SuggestForm(true, false, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 			return
 		}
 
 		f, fh, err := r.FormFile("image")
 		if err == http.ErrMissingFile {
-			templ.Handler(components.SuggestForm(false, true)).ServeHTTP(w, r)
+			templ.Handler(components.SuggestForm(false, true, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 			return
 		} else if err != nil {
 			http.Error(w, fmt.Sprintf("err = %s", err), http.StatusInternalServerError)
 			return
 		}
 		defer f.Close()
+
+		if fh.Size > maxMemory {
+			templ.Handler(components.SuggestForm(false, true, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
+			return
+		}
+
+		if !slices.Contains(fileExtensions, path.Ext(fh.Filename)) {
+			templ.Handler(components.SuggestForm(false, true, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
+			return
+		}
 
 		tx, err := db.BeginTx(r.Context(), nil)
 		if err != nil {

@@ -18,8 +18,6 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-var imageSaveDir = "./data/imgs"
-
 func AdminRoute(db *sql.DB, c *CreateRouteConfig) func(r chi.Router) {
 	if c != nil {
 		imageSaveDir = c.ImageSaveDir
@@ -59,10 +57,12 @@ func AdminRoute(db *sql.DB, c *CreateRouteConfig) func(r chi.Router) {
 		r.Get("/", AdminGET)
 		r.Post("/", AdminPOST(db))
 		r.Get("/{token:[\\w-]+}", AdminDashboardGET(db))
-		r.Get("/{token:[\\w-]+}/review", ReviewGET(db))
-		r.Patch("/{token:[\\w-]+}/review/{id:\\d+}", ReviewPATCH(db))
-		r.Delete("/{token:[\\w-]+}/review/{id:\\d+}", ReviewDELETE(db))
-		r.Get("/{token:[\\w-]+}/edit", EditGET(db))
+		r.Get("/{token:[\\w-]+}/review", CardGET(db, true))
+		r.Patch("/{token:[\\w-]+}/review/{id:\\d+}", CardPATCH(db, true))
+		r.Delete("/{token:[\\w-]+}/review/{id:\\d+}", CardDELETE(db, true))
+		r.Get("/{token:[\\w-]+}/edit", CardGET(db, false))
+		r.Patch("/{token:[\\w-]+}/edit/{id:\\d+}", CardPATCH(db, false))
+		r.Delete("/{token:[\\w-]+}/edit/{id:\\d+}", CardDELETE(db, false))
 	}
 }
 
@@ -83,7 +83,7 @@ func AdminDashboardGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		reviewCount, err := getPendingReviews(r.Context(), db)
+		reviewCount, err := getPendingCards(r.Context(), db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
 			return
@@ -111,7 +111,7 @@ func AdminPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ReviewGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+func CardGET(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := chi.URLParam(r, "token")
 
@@ -125,7 +125,7 @@ func ReviewGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// TODO: make this more efficient/paginated if there are a lot of cards to review
-		cards, err := models.Cards(qm.Where(fmt.Sprintf("%s = false", models.CardColumns.Accepted))).All(r.Context(), db)
+		cards, err := models.Cards(qm.Where(fmt.Sprintf("%s = ?", models.CardColumns.Accepted), !isReview)).All(r.Context(), db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to fetch cards. err = %s", err), http.StatusInternalServerError)
 			return
@@ -134,13 +134,29 @@ func ReviewGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		for _, c := range cards {
 			allCards = append(allCards, *c)
 		}
-		templ.Handler(components.ReviewIndex(token, allCards)).ServeHTTP(w, r)
+
+		if isReview {
+			templ.Handler(components.ReviewIndex(token, allCards)).ServeHTTP(w, r)
+		} else {
+			templ.Handler(components.EditIndex(token, allCards)).ServeHTTP(w, r)
+		}
 
 	}
 }
 
-func ReviewPATCH(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+func CardPATCH(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		token := chi.URLParam(r, "token")
+
+		valid, err := validateToken(token, r.Context(), db)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to check if token is valid. err = %s", err), http.StatusInternalServerError)
+			return
+		} else if !valid {
+			templ.Handler(components.AdminForm(true)).ServeHTTP(w, r)
+			return
+		}
+
 		r.ParseForm()
 		name := r.FormValue("name")
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -155,7 +171,7 @@ func ReviewPATCH(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		card, err := models.Cards(qm.Where(fmt.Sprintf("%s = false AND %s = ?", models.CardColumns.Accepted, models.CardColumns.ID), id)).One(r.Context(), tx)
+		card, err := models.Cards(qm.Where(fmt.Sprintf("%s = ? AND %s = ?", models.CardColumns.Accepted, models.CardColumns.ID), !isReview, id)).One(r.Context(), tx)
 		if err != nil {
 			tx.Rollback()
 			http.Error(w, fmt.Sprintf("unable to fetch card. err = %s", err), http.StatusInternalServerError)
@@ -169,24 +185,51 @@ func ReviewPATCH(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 
 		tx.Commit()
 
-		count, err := getPendingReviews(r.Context(), db)
-		if err != nil {
+		var count int64
+		if isReview {
+			count, err = getPendingCards(r.Context(), db)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
-				return
+				if err != nil {
+					http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
+					return
+				}
+			}
+		} else {
+			count, err = getReviewedCards(r.Context(), db)
+			if err != nil {
+				if err != nil {
+					http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
+					return
+				}
 			}
 		}
+
 		if count == 0 {
 			w.Header().Add("HX-Refresh", "true")
 		}
 
-		w.Write([]byte("200"))
+		if isReview {
+			w.Write([]byte("200"))
+		} else {
+			templ.Handler(components.EditCard(token, *card, isReview)).ServeHTTP(w, r)
+		}
 
 	}
 }
 
-func ReviewDELETE(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+func CardDELETE(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		token := chi.URLParam(r, "token")
+
+		valid, err := validateToken(token, r.Context(), db)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to check if token is valid. err = %s", err), http.StatusInternalServerError)
+			return
+		} else if !valid {
+			templ.Handler(components.AdminForm(true)).ServeHTTP(w, r)
+			return
+		}
+
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			http.Error(w, "invalid url parameter", http.StatusBadRequest)
@@ -199,7 +242,7 @@ func ReviewDELETE(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		card, err := models.Cards(qm.Where(fmt.Sprintf("%s = false AND %s = ?", models.CardColumns.Accepted, models.CardColumns.ID), id)).One(r.Context(), tx)
+		card, err := models.Cards(qm.Where(fmt.Sprintf("%s = ? AND %s = ?", models.CardColumns.Accepted, models.CardColumns.ID), !isReview, id)).One(r.Context(), tx)
 		if err != nil {
 			tx.Rollback()
 			http.Error(w, fmt.Sprintf("unable to delete card. err = %s", err), http.StatusInternalServerError)
@@ -217,13 +260,25 @@ func ReviewDELETE(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		count, err := getPendingReviews(r.Context(), db)
-		if err != nil {
+		var count int64
+		if isReview {
+			count, err = getPendingCards(r.Context(), db)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
-				return
+				if err != nil {
+					http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
+					return
+				}
+			}
+		} else {
+			count, err = getReviewedCards(r.Context(), db)
+			if err != nil {
+				if err != nil {
+					http.Error(w, fmt.Sprintf("failed to count reviews. err = %s", err), http.StatusInternalServerError)
+					return
+				}
 			}
 		}
+
 		if count == 0 {
 			w.Header().Add("HX-Refresh", "true")
 		}
@@ -253,6 +308,10 @@ func validateToken(token string, c context.Context, db *sql.DB) (bool, error) {
 	return true, nil
 }
 
-func getPendingReviews(c context.Context, db *sql.DB) (int64, error) {
+func getReviewedCards(c context.Context, db *sql.DB) (int64, error) {
+	return models.Cards(qm.Where(fmt.Sprintf("%s = true", models.CardColumns.Accepted))).Count(c, db)
+}
+
+func getPendingCards(c context.Context, db *sql.DB) (int64, error) {
 	return models.Cards(qm.Where(fmt.Sprintf("%s = false", models.CardColumns.Accepted))).Count(c, db)
 }

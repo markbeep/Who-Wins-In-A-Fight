@@ -2,7 +2,7 @@ package components
 
 import "fmt"
 
-templ SuggestIndex(invalidName, invalidFile bool) {
+templ SuggestIndex(invalidName, invalidFile bool, imageAccept string) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
 		<div class="w-full flex flex-col items-center h-full justify-center">
 			<main class="w-full max-w-md space-y-8 px-8 md:px-0">
@@ -10,14 +10,14 @@ templ SuggestIndex(invalidName, invalidFile bool) {
 					<h1 class="text-3xl font-bold">Suggest a Character</h1>
 					<p class="text-gray-500 dark:text-gray-400">Want to suggest a new character? Give their name and upload a picture. Should not contain any nudity.</p>
 				</div>
-				@SuggestForm(invalidName, invalidFile)
+				@SuggestForm(invalidName, invalidFile, imageAccept)
 				@Navbar("")
 			</main>
 		</div>
 	}
 }
 
-templ SuggestForm(invalidName, invalidFile bool) {
+templ SuggestForm(invalidName, invalidFile bool, imageAccept string) {
 	<form
 		class="space-y-4"
 		hx-post="/suggest"
@@ -27,26 +27,26 @@ templ SuggestForm(invalidName, invalidFile bool) {
 		<div class="space-y-2">
 			@Label("Name", "name")
 			if invalidName {
-				@Input("name", "John Cena", "border-red-400")
+				@Input("name", "John Cena", "border-red-400", "")
 				<p class="text-red-400">Invalid name</p>
 			} else {
-				@Input("name", "John Cena", "")
+				@Input("name", "John Cena", "", "")
 			}
 		</div>
 		<div class="space-y-2">
-			@Label("Image Upload", "image")
+			@Label("Image Upload (has to be under 10MB)", "image")
 			if invalidFile {
-				@fileUpload("border-red-400")
+				@fileUpload("border-red-400", imageAccept)
 				<p class="text-red-400">Invalid file</p>
 			} else {
-				@fileUpload("")
+				@fileUpload("", imageAccept)
 			}
 		</div>
 		@Button("Submit!")
 	</form>
 }
 
-templ fileUpload(extraClass string) {
+templ fileUpload(extraClass, accept string) {
 	<input
 		class={ fmt.Sprintf(`flex h-10 w-full rounded-md border border-input dark:bg-black px-3 py-2 text-sm ring-offset-black
 					placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2

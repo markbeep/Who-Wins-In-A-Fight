@@ -30,8 +30,9 @@ var (
 	dbHost     = flag.String("db-host", os.Getenv("POSTGRES_DB_SERVER"), "host of the database")
 
 	// Creation envs
-	maxFileSize  = flag.String("max-filesize", os.Getenv("MAX_FILESIZE"), "maximum filesize to store in memory (default: 32MB)")
-	imageSaveDir = flag.String("image-dir", os.Getenv("IMAGE_SAVE_DIR"), "directory to store images in (default: ./data/imgs)")
+	maxFileSize       = flag.String("max-filesize", os.Getenv("MAX_FILESIZE"), "maximum filesize to store in memory (default: 10MB)")
+	imageSaveDir      = flag.String("image-dir", os.Getenv("IMAGE_SAVE_DIR"), "directory to store images in (default: ./data/imgs)")
+	allowedExtensions = flag.String("allowed-extensions", os.Getenv("ALLOWED_EXTENSIONS"), "the allowed image extensions to be submitted (default: .png .jpg .jpeg)")
 )
 
 func main() {
@@ -41,8 +42,9 @@ func main() {
 		*port = "3000"
 	}
 	createConfig := category.CreateRouteConfig{
-		MaxMemory:    32 << 20, // 32MB
-		ImageSaveDir: "./static/imgs",
+		MaxMemory:         10 << 20, // 10MB
+		ImageSaveDir:      "./static/imgs",
+		AllowedExtensions: []string{".jpg", ".jpeg", ".png"},
 	}
 	if *maxFileSize != "" {
 		val, err := strconv.ParseInt(*maxFileSize, 10, 64)
@@ -53,6 +55,9 @@ func main() {
 	}
 	if *imageSaveDir != "" {
 		createConfig.ImageSaveDir = *imageSaveDir
+	}
+	if *allowedExtensions != "" {
+		createConfig.AllowedExtensions = strings.Split(*allowedExtensions, " ")
 	}
 
 	// TODO: involve the logger more
@@ -85,8 +90,7 @@ func main() {
 	r.Get("/static/*", Static)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })
 	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
-	r.Get("/suggest", category.SuggestGET)
-	r.Post("/suggest", category.SuggestPOST(db, &createConfig))
+	r.Route("/suggest", category.SuggestRoute(db, &createConfig))
 	r.Route("/admin", category.AdminRoute(db, &createConfig))
 
 	host := fmt.Sprintf(":%s", *port)
