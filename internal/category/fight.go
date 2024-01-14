@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -17,6 +16,8 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+const DEBUG = false
 
 func getRandomBattle(ctx context.Context, db *sql.DB) (*models.Battle, error) {
 	card1, err := models.Cards(
@@ -68,17 +69,20 @@ func getRandomBattle(ctx context.Context, db *sql.DB) (*models.Battle, error) {
 
 func BattleGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: get random cards from db
+		start := time.Now()
+
 		battle, err := getRandomBattle(r.Context(), db)
-		if err != nil {
-			if strings.Contains(err.Error(), "no rows in result set") {
-				templ.Handler(components.EmptyIndex()).ServeHTTP(w, r)
-			}
+		if err == sql.ErrNoRows {
+			templ.Handler(components.Index(nil, DEBUG)).ServeHTTP(w, r)
+			return
+		} else if err != nil {
 			log.Printf("getRandomBattle err = %s", err)
 			http.Error(w, "failed to create battle", http.StatusInternalServerError)
 			return
 		}
-		templ.Handler(components.Index(*battle)).ServeHTTP(w, r)
+		templ.Handler(components.Index(battle, DEBUG)).ServeHTTP(w, r)
+
+		log.Println("TIME TAKEN", time.Now().Sub(start))
 	}
 }
 
@@ -106,7 +110,7 @@ func BattlePOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			qm.Load(models.BattleRels.Card1),
 			qm.Load(models.BattleRels.Card2),
 			qm.Where(fmt.Sprintf("%s = ?", models.BattleColumns.Token), token),
-		).One(r.Context(), db)
+		).One(r.Context(), tx)
 		if err != nil || battle == nil {
 			tx.Rollback()
 			http.Error(w, "invalid token", http.StatusBadRequest)
@@ -122,8 +126,8 @@ func BattlePOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		} else {
 			card2.Wins++
 		}
-		card1.Update(r.Context(), db, boil.Infer())
-		card2.Update(r.Context(), db, boil.Infer())
+		card1.Update(r.Context(), tx, boil.Infer())
+		card2.Update(r.Context(), tx, boil.Infer())
 
 		tx.Commit()
 
@@ -134,6 +138,6 @@ func BattlePOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "failed starting a new battle", http.StatusBadRequest)
 			return
 		}
-		templ.Handler(components.Battle(*newBattle)).ServeHTTP(w, r)
+		templ.Handler(components.Battle(*newBattle, DEBUG)).ServeHTTP(w, r)
 	}
 }

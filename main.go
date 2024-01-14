@@ -87,9 +87,7 @@ func main() {
 	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
 	r.Get("/suggest", category.SuggestGET)
 	r.Post("/suggest", category.SuggestPOST(db, &createConfig))
-	r.Get("/admin", category.AdminGET)
-	r.Post("/admin", category.AdminPOST(db))
-	r.Get("/admin/{token:[\\w-]+}", category.AdminTokenGET(db))
+	r.Route("/admin", category.AdminRoute(db, &createConfig))
 
 	host := fmt.Sprintf(":%s", *port)
 	log.Printf("listening on %s", host)

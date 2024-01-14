@@ -1,16 +1,116 @@
 package components
 
-templ AdminTokenIndex() {
-	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
-		<div class="w-full flex flex-col items-center">
-			<form
-				class="flex flex-col [&>*]:w-full max-w-[40rem] w-3/4 mx-10"
-				hx-post="/admin"
-			>
-				<p>Enter admin token</p>
-				<input class="p-1 border border-white bg-black" name="token"/>
-				<button class="p-2 border border-white bg-black mt-4 hover:bg-gray-800" type="submit">Log in</button>
-			</form>
+import (
+	"compare/models"
+	"fmt"
+)
+
+templ AdminTokenIndex(invalid bool) {
+	@Base("Enter Access Token", "Enter an access token to continue") {
+		<div class="w-full flex flex-col items-center h-full justify-center">
+			<main class="w-full max-w-md space-y-8 px-8 md:px-0">
+				<div class="space-y-4">
+					<h1 class="text-3xl font-bold">Admin Login</h1>
+					<p class="text-gray-500 dark:text-gray-400">Admin login page. If you have an access token you can enter it here to get access to the review page.</p>
+				</div>
+				@AdminForm(invalid)
+				@Navbar("Admin")
+			</main>
+		</div>
+	}
+}
+
+templ AdminForm(invalid bool) {
+	<form
+		class="space-y-4"
+		hx-post="/admin"
+		hx-swap="outerHTML"
+	>
+		@Label("Access Token", "token")
+		if invalid {
+			@Input("token", "hBafG...", "border-red-400")
+			<p class="text-red-400">Invalid token</p>
+		} else {
+			@Input("token", "hBafG...", "")
+		}
+		@Button("Log in")
+	</form>
+}
+
+templ AdminDashboard(token string, pendingReviews int64) {
+	@Base("Admin Dashboard", "Admin dashboard for the \"Who would win in a fight\" game.") {
+		<div class="w-full flex flex-col items-center h-full justify-center">
+			<main class="w-full max-w-md space-y-8 px-8 md:px-0">
+				<div class="space-y-4">
+					<h1 class="text-3xl font-bold">Admin Dashboard</h1>
+				</div>
+				<div class="flex flex-col space-y-4">
+					<a href={ templ.URL(fmt.Sprintf("/admin/%s/review", token)) }>
+						@Button(fmt.Sprintf("Review (%d)", pendingReviews))
+					</a>
+					<a href={ templ.URL(fmt.Sprintf("/admin/%s/edit", token)) }>
+						@Button("Edit")
+					</a>
+				</div>
+				@Navbar("Admin")
+			</main>
+		</div>
+	}
+}
+
+templ ReviewIndex(token string, cards []models.Card) {
+	@Base("Review Cards", "Review what cards are valid or should be deleted.") {
+		<div
+			id="review-base"
+			class="flex flex-col items-center justify-center space-y-8 pt-8"
+		>
+			if len(cards) == 0 {
+				<main class="max-w-md space-y-4 px-8 md:px-0">
+					<h3 class="text-2xl font-semibold dark:text-white mb-4">There are no cards to review</h3>
+					<a href={ templ.URL(fmt.Sprintf("/admin/%s", token)) }>
+						@Button("Back to admin dashboard")
+					</a>
+				</main>
+			} else {
+				<main class="max-w-md space-y-4 px-8 md:px-0">
+					<h1 class="text-3xl font-bold">Review Suggestions</h1>
+					<p class="text-gray-500 dark:text-gray-400">Accept or decline suggestions. If a name needs adjustment, you can also modify it before accepting.</p>
+				</main>
+				<div
+					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
+				>
+					for _, c := range cards {
+						<div
+							id={ fmt.Sprintf("review-card-%d", c.ID) }
+							class="relative group overflow-hidden rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md"
+						>
+							<div class="p-6 flex flex-col items-center space-y-2">
+								<img
+									src={ fmt.Sprintf("/static/imgs/%s", c.Filename) }
+									class="object-cover aspect-square w-full rounded-lg max-w-64"
+								/>
+								<form
+									hx-patch={ fmt.Sprintf("/admin/%s/review/%d", token, c.ID) }
+									hx-swap="delete"
+									class="space-y-2 w-full"
+									hx-target={ fmt.Sprintf("#review-card-%d", c.ID) }
+								>
+									@Input("name", c.Name, "placeholder:text-white/90")
+									@ColoredButton("Accept", "text-white bg-green-600 hover:bg-green-600/90")
+								</form>
+								<form
+									hx-delete={ fmt.Sprintf("/admin/%s/review/%d", token, c.ID) }
+									hx-swap="delete"
+									class="w-full"
+									hx-target={ fmt.Sprintf("#review-card-%d", c.ID) }
+								>
+									@ColoredButton("Decline", "text-white bg-red-600 hover:bg-red-600/90")
+								</form>
+							</div>
+						</div>
+					}
+				</div>
+			}
 		</div>
 	}
 }

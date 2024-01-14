@@ -3,30 +3,26 @@ package components
 import "fmt"
 import "compare/models"
 
-templ EmptyIndex() {
+templ Index(battle *models.Battle, debug bool) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
-		<div class="w-full flex flex-col items-center">
-			<h1 class="text-4xl mb-6">Who would win in a fight?</h1>
-			<p class="italic text-gray-400 mt-2">Not enough images added to start a fight</p>
-		</div>
-	}
-}
-
-templ Index(battle models.Battle) {
-	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
-		<div class="w-full flex flex-col items-center">
-			<h1 class="text-2xl md:text-4xl mb-6 text-center p-2">Who would win in a fight?</h1>
-			@Battle(battle)
+		<main class="flex flex-col items-center justify-center h-full p-2">
+			<h1 class="text-4xl font-bold mb-10 text-center">Who Would Win In A Fight?</h1>
+			if battle == nil {
+				<p class="italic text-gray-400 mt-2">Not enough images added to start a fight</p>
+			} else {
+				@Battle(*battle, debug)
+			}
 			<p id="card-loader" class="text-gray-400 htmx-indicator mt-2">Loading next battle...</p>
-		</div>
+			@Navbar("Home")
+		</main>
 	}
 }
 
-templ Battle(battle models.Battle) {
-	<main id="cards" class="flex justify-center w-4/5 gap-6 md:gap-20">
-		@Card(*battle.R.Card1, battle.Token, 0)
-		@Card(*battle.R.Card2, battle.Token, 1)
-	</main>
+templ Battle(battle models.Battle, debug bool) {
+	<div id="cards" class="flex flex-col md:flex-row gap-4">
+		@Card(*battle.R.Card1, battle.Token, 0, debug)
+		@Card(*battle.R.Card2, battle.Token, 1, debug)
+	</div>
 }
 
 script DisableButton() {
@@ -35,20 +31,23 @@ script DisableButton() {
     }
 }
 
-templ Card(card models.Card, token string, index int) {
+templ Card(card models.Card, token string, index int, debug bool) {
 	<button
 		hx-post={ fmt.Sprintf("/card/%s/%d", token, index) }
 		hx-target="#cards"
 		hx-indicator="#card-loader"
 		onClick={ DisableButton() }
-		class="battle-card w-fit border border-white hover:border-yellow-300"
+		class="rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md hover:brightness-125"
 	>
-		<div
-			class="hover:brightness-125"
-		>
-			<img src={ fmt.Sprintf("/static/imgs/%s", card.Filename) } class="object-cover w-[40vw] max-w-[40vh] h-[60vw] max-h-[60vh] rounded-md"/>
+		<div class="p-4 md:p-6 flex flex-col items-center">
+			<img
+				src={ fmt.Sprintf("/static/imgs/%s", card.Filename) }
+				class="object-cover aspect-square w-40 md:w-64 rounded-lg"
+			/>
+			if debug {
+				<p class="dark:text-white">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
+			}
+			<p class="text-clip mt-2 md:mt-4 text-xl md:text-3xl font-semibold text-center">{ card.Name }</p>
 		</div>
-		<p class="text-white w-[40vw] max-w-[40vh]">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
-		<p class="text-clip mb-1 text-xl md:text-3xl w-[40vw] max-w-[40vh] text-center overflow-clip h-10">{ card.Name }</p>
 	</button>
 }

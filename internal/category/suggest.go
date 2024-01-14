@@ -24,7 +24,7 @@ type CreateRouteConfig struct {
 }
 
 func SuggestGET(w http.ResponseWriter, r *http.Request) {
-	templ.Handler(components.SuggestIndex()).ServeHTTP(w, r)
+	templ.Handler(components.SuggestIndex(false, false)).ServeHTTP(w, r)
 }
 
 func SuggestPOST(db *sql.DB, c *CreateRouteConfig) func(w http.ResponseWriter, r *http.Request) {
@@ -42,19 +42,19 @@ func SuggestPOST(db *sql.DB, c *CreateRouteConfig) func(w http.ResponseWriter, r
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(maxMemory)
 		if err != nil {
-			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			templ.Handler(components.SuggestForm(true, true)).ServeHTTP(w, r)
 			return
 		}
 
 		name := r.PostFormValue("name")
 		if len(name) == 0 {
-			http.Error(w, "Missing name value", http.StatusBadRequest)
+			templ.Handler(components.SuggestForm(true, false)).ServeHTTP(w, r)
 			return
 		}
 
 		f, fh, err := r.FormFile("image")
 		if err == http.ErrMissingFile {
-			http.Error(w, "No image uploaded", http.StatusBadRequest)
+			templ.Handler(components.SuggestForm(false, true)).ServeHTTP(w, r)
 			return
 		} else if err != nil {
 			http.Error(w, fmt.Sprintf("err = %s", err), http.StatusInternalServerError)
@@ -76,7 +76,7 @@ func SuggestPOST(db *sql.DB, c *CreateRouteConfig) func(w http.ResponseWriter, r
 				http.Error(w, fmt.Sprintf("failed to generate image token. err = %s", err), http.StatusInternalServerError)
 				return
 			}
-			exists, err := models.Cards(qm.Where(fmt.Sprintf("%s = ?", models.CardColumns.Token), imageToken)).Exists(r.Context(), db)
+			exists, err := models.Cards(qm.Where(fmt.Sprintf("%s = ?", models.CardColumns.Token), imageToken)).Exists(r.Context(), tx)
 			if err != nil {
 				tx.Rollback()
 				http.Error(w, fmt.Sprintf("failed to fetch tokens. err = %s", err), http.StatusInternalServerError)
@@ -121,12 +121,11 @@ func SuggestPOST(db *sql.DB, c *CreateRouteConfig) func(w http.ResponseWriter, r
 			Name:     name,
 			Token:    imageToken,
 			Filename: imageName,
-			Accepted: true, // TODO: remove this line
 		}
-		card.Insert(r.Context(), db, boil.Infer())
+		card.Insert(r.Context(), tx, boil.Infer())
 
 		tx.Commit()
 
-		templ.Handler(components.SuggestSuccess()).ServeHTTP(w, r)
+		templ.Handler(components.SuggestSuccess(name)).ServeHTTP(w, r)
 	}
 }

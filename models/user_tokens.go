@@ -23,37 +23,44 @@ import (
 
 // UserToken is an object representing the database table.
 type UserToken struct {
-	ID    int    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Token string `boil:"token" json:"token" toml:"token" yaml:"token"`
+	ID        int    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Token     string `boil:"token" json:"token" toml:"token" yaml:"token"`
+	Superuser bool   `boil:"superuser" json:"superuser" toml:"superuser" yaml:"superuser"`
 
 	R *userTokenR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userTokenL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserTokenColumns = struct {
-	ID    string
-	Token string
+	ID        string
+	Token     string
+	Superuser string
 }{
-	ID:    "id",
-	Token: "token",
+	ID:        "id",
+	Token:     "token",
+	Superuser: "superuser",
 }
 
 var UserTokenTableColumns = struct {
-	ID    string
-	Token string
+	ID        string
+	Token     string
+	Superuser string
 }{
-	ID:    "user_tokens.id",
-	Token: "user_tokens.token",
+	ID:        "user_tokens.id",
+	Token:     "user_tokens.token",
+	Superuser: "user_tokens.superuser",
 }
 
 // Generated where
 
 var UserTokenWhere = struct {
-	ID    whereHelperint
-	Token whereHelperstring
+	ID        whereHelperint
+	Token     whereHelperstring
+	Superuser whereHelperbool
 }{
-	ID:    whereHelperint{field: "\"user_tokens\".\"id\""},
-	Token: whereHelperstring{field: "\"user_tokens\".\"token\""},
+	ID:        whereHelperint{field: "\"user_tokens\".\"id\""},
+	Token:     whereHelperstring{field: "\"user_tokens\".\"token\""},
+	Superuser: whereHelperbool{field: "\"user_tokens\".\"superuser\""},
 }
 
 // UserTokenRels is where relationship names are stored.
@@ -73,9 +80,9 @@ func (*userTokenR) NewStruct() *userTokenR {
 type userTokenL struct{}
 
 var (
-	userTokenAllColumns            = []string{"id", "token"}
+	userTokenAllColumns            = []string{"id", "token", "superuser"}
 	userTokenColumnsWithoutDefault = []string{"token"}
-	userTokenColumnsWithDefault    = []string{"id"}
+	userTokenColumnsWithDefault    = []string{"id", "superuser"}
 	userTokenPrimaryKeyColumns     = []string{"id"}
 	userTokenGeneratedColumns      = []string{}
 )

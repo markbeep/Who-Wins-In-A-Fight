@@ -1,26 +1,69 @@
 package components
 
-templ SuggestIndex() {
+import "fmt"
+
+templ SuggestIndex(invalidName, invalidFile bool) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
-		<div class="w-full flex flex-col items-center mt-8">
-			<form
-				class="flex flex-col [&>*]:w-full max-w-[40rem] w-3/4 mx-10"
-				hx-post="/suggest"
-				hx-encoding="multipart/form-data"
-				hx-swap="outerHTML"
-			>
-				<h1 class="text-2xl text-left w-full mb-2">Suggest a new character</h1>
-				<p>Name</p>
-				<input class="p-1 border border-white bg-black" name="name" placeholder="John Cena"/>
-				<p class="mt-2">Upload Image</p>
-				<input class="p-1 border border-white bg-black" type="file" id="img" name="image" accept=".png, .jpg, .jpeg"/>
-				<button class="p-2 border border-white bg-black mt-4 hover:bg-gray-800" type="submit">Submit!</button>
-			</form>
+		<div class="w-full flex flex-col items-center h-full justify-center">
+			<main class="w-full max-w-md space-y-8 px-8 md:px-0">
+				<div class="space-y-4">
+					<h1 class="text-3xl font-bold">Suggest a Character</h1>
+					<p class="text-gray-500 dark:text-gray-400">Want to suggest a new character? Give their name and upload a picture. Should not contain any nudity.</p>
+				</div>
+				@SuggestForm(invalidName, invalidFile)
+				@Navbar("")
+			</main>
 		</div>
 	}
 }
 
-templ SuggestSuccess() {
-	<p class="text-xl">Sucess!</p>
-	<a class="my-2 p-2 border border-white hover:bg-gray-800" href="/suggest">Suggest another character</a>
+templ SuggestForm(invalidName, invalidFile bool) {
+	<form
+		class="space-y-4"
+		hx-post="/suggest"
+		hx-encoding="multipart/form-data"
+		hx-swap="outerHTML"
+	>
+		<div class="space-y-2">
+			@Label("Name", "name")
+			if invalidName {
+				@Input("name", "John Cena", "border-red-400")
+				<p class="text-red-400">Invalid name</p>
+			} else {
+				@Input("name", "John Cena", "")
+			}
+		</div>
+		<div class="space-y-2">
+			@Label("Image Upload", "image")
+			if invalidFile {
+				@fileUpload("border-red-400")
+				<p class="text-red-400">Invalid file</p>
+			} else {
+				@fileUpload("")
+			}
+		</div>
+		@Button("Submit!")
+	</form>
+}
+
+templ fileUpload(extraClass string) {
+	<input
+		class={ fmt.Sprintf(`flex h-10 w-full rounded-md border border-input dark:bg-black px-3 py-2 text-sm ring-offset-black
+					placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+					disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-white file:text-sm file:font-medium %s`, extraClass) }
+		type="file"
+		id="img"
+		name="image"
+		accept=".png, .jpg, .jpeg"
+	/>
+}
+
+templ SuggestSuccess(name string) {
+	<div>
+		<h3 class="text-xl font-semibold text-green-400">Success!</h3>
+		<p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Successfully suggested { name }. Your suggestion will now be reviewed.</p>
+		<a href="/suggest">
+			@Button("Suggest another character")
+		</a>
+	</div>
 }

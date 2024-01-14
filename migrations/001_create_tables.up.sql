@@ -18,5 +18,6 @@ CREATE TABLE IF NOT EXISTS battles (
 
 CREATE TABLE IF NOT EXISTS user_tokens (
     id SERIAL PRIMARY KEY,
-    token TEXT NOT NULL
+    token TEXT NOT NULL,
+    superuser BOOLEAN NOT NULL DEFAULT false
 );
