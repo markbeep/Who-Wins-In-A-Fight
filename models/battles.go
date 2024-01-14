@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,42 +23,42 @@ import (
 
 // Battle is an object representing the database table.
 type Battle struct {
-	ID      int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Start   null.Time `boil:"start" json:"start,omitempty" toml:"start" yaml:"start,omitempty"`
-	Card1ID int       `boil:"card1_id" json:"card1_id" toml:"card1_id" yaml:"card1_id"`
-	Card2ID int       `boil:"card2_id" json:"card2_id" toml:"card2_id" yaml:"card2_id"`
-	Token   string    `boil:"token" json:"token" toml:"token" yaml:"token"`
+	ID        int `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Card1ID   int `boil:"card1_id" json:"card1_id" toml:"card1_id" yaml:"card1_id"`
+	Card2ID   int `boil:"card2_id" json:"card2_id" toml:"card2_id" yaml:"card2_id"`
+	Card1Wins int `boil:"card1_wins" json:"card1_wins" toml:"card1_wins" yaml:"card1_wins"`
+	Card2Wins int `boil:"card2_wins" json:"card2_wins" toml:"card2_wins" yaml:"card2_wins"`
 
 	R *battleR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L battleL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var BattleColumns = struct {
-	ID      string
-	Start   string
-	Card1ID string
-	Card2ID string
-	Token   string
+	ID        string
+	Card1ID   string
+	Card2ID   string
+	Card1Wins string
+	Card2Wins string
 }{
-	ID:      "id",
-	Start:   "start",
-	Card1ID: "card1_id",
-	Card2ID: "card2_id",
-	Token:   "token",
+	ID:        "id",
+	Card1ID:   "card1_id",
+	Card2ID:   "card2_id",
+	Card1Wins: "card1_wins",
+	Card2Wins: "card2_wins",
 }
 
 var BattleTableColumns = struct {
-	ID      string
-	Start   string
-	Card1ID string
-	Card2ID string
-	Token   string
+	ID        string
+	Card1ID   string
+	Card2ID   string
+	Card1Wins string
+	Card2Wins string
 }{
-	ID:      "battles.id",
-	Start:   "battles.start",
-	Card1ID: "battles.card1_id",
-	Card2ID: "battles.card2_id",
-	Token:   "battles.token",
+	ID:        "battles.id",
+	Card1ID:   "battles.card1_id",
+	Card2ID:   "battles.card2_id",
+	Card1Wins: "battles.card1_wins",
+	Card2Wins: "battles.card2_wins",
 }
 
 // Generated where
@@ -87,69 +86,18 @@ func (w whereHelperint) NIN(slice []int) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
-type whereHelpernull_Time struct{ field string }
-
-func (w whereHelpernull_Time) EQ(x null.Time) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Time) NEQ(x null.Time) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Time) LT(x null.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Time) LTE(x null.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Time) GT(x null.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
-func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
-type whereHelperstring struct{ field string }
-
-func (w whereHelperstring) EQ(x string) qm.QueryMod     { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperstring) NEQ(x string) qm.QueryMod    { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperstring) LT(x string) qm.QueryMod     { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperstring) LTE(x string) qm.QueryMod    { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperstring) GT(x string) qm.QueryMod     { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperstring) GTE(x string) qm.QueryMod    { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperstring) LIKE(x string) qm.QueryMod   { return qm.Where(w.field+" LIKE ?", x) }
-func (w whereHelperstring) NLIKE(x string) qm.QueryMod  { return qm.Where(w.field+" NOT LIKE ?", x) }
-func (w whereHelperstring) ILIKE(x string) qm.QueryMod  { return qm.Where(w.field+" ILIKE ?", x) }
-func (w whereHelperstring) NILIKE(x string) qm.QueryMod { return qm.Where(w.field+" NOT ILIKE ?", x) }
-func (w whereHelperstring) IN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
 var BattleWhere = struct {
-	ID      whereHelperint
-	Start   whereHelpernull_Time
-	Card1ID whereHelperint
-	Card2ID whereHelperint
-	Token   whereHelperstring
+	ID        whereHelperint
+	Card1ID   whereHelperint
+	Card2ID   whereHelperint
+	Card1Wins whereHelperint
+	Card2Wins whereHelperint
 }{
-	ID:      whereHelperint{field: "\"battles\".\"id\""},
-	Start:   whereHelpernull_Time{field: "\"battles\".\"start\""},
-	Card1ID: whereHelperint{field: "\"battles\".\"card1_id\""},
-	Card2ID: whereHelperint{field: "\"battles\".\"card2_id\""},
-	Token:   whereHelperstring{field: "\"battles\".\"token\""},
+	ID:        whereHelperint{field: "\"battles\".\"id\""},
+	Card1ID:   whereHelperint{field: "\"battles\".\"card1_id\""},
+	Card2ID:   whereHelperint{field: "\"battles\".\"card2_id\""},
+	Card1Wins: whereHelperint{field: "\"battles\".\"card1_wins\""},
+	Card2Wins: whereHelperint{field: "\"battles\".\"card2_wins\""},
 }
 
 // BattleRels is where relationship names are stored.
@@ -190,9 +138,9 @@ func (r *battleR) GetCard2() *Card {
 type battleL struct{}
 
 var (
-	battleAllColumns            = []string{"id", "start", "card1_id", "card2_id", "token"}
-	battleColumnsWithoutDefault = []string{"card1_id", "card2_id", "token"}
-	battleColumnsWithDefault    = []string{"id", "start"}
+	battleAllColumns            = []string{"id", "card1_id", "card2_id", "card1_wins", "card2_wins"}
+	battleColumnsWithoutDefault = []string{"card1_id", "card2_id"}
+	battleColumnsWithDefault    = []string{"id", "card1_wins", "card2_wins"}
 	battlePrimaryKeyColumns     = []string{"id"}
 	battleGeneratedColumns      = []string{}
 )

@@ -22,7 +22,7 @@ templ AdminTokenIndex(invalid bool) {
 
 templ AdminForm(invalid bool) {
 	<form
-		class="space-y-4"
+		class="space-y-2"
 		hx-post="/admin"
 		hx-swap="outerHTML"
 	>
@@ -81,10 +81,11 @@ templ ReviewIndex(token string, cards []models.Card) {
 				</main>
 				<div
 					class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
-				></div>
-				for _, c := range cards {
-					@EditCard(token, c, true)
-				}
+				>
+					for _, c := range cards {
+						@EditCard(token, c, true)
+					}
+				</div>
 			}
 		</div>
 	}

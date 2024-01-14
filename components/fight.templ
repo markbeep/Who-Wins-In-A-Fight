@@ -2,15 +2,16 @@ package components
 
 import "fmt"
 import "compare/models"
+import "compare/internal"
 
-templ Index(battle *models.Battle, debug bool) {
+templ Index(battle *internal.Battle, debug bool) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
 		<main class="flex flex-col items-center justify-center h-full p-2">
 			<h1 class="text-4xl font-bold mb-10 text-center">Who Would Win In A Fight?</h1>
 			if battle == nil {
 				<p class="italic text-gray-400 mt-2">Not enough images added to start a fight</p>
 			} else {
-				@Battle(*battle, debug)
+				@Battle(battle, debug)
 			}
 			<p id="card-loader" class="text-gray-400 htmx-indicator mt-2">Loading next battle...</p>
 			@Navbar("Home")
@@ -18,10 +19,10 @@ templ Index(battle *models.Battle, debug bool) {
 	}
 }
 
-templ Battle(battle models.Battle, debug bool) {
+templ Battle(battle *internal.Battle, debug bool) {
 	<div id="cards" class="flex flex-col md:flex-row gap-4">
-		@Card(*battle.R.Card1, battle.Token, 0, debug)
-		@Card(*battle.R.Card2, battle.Token, 1, debug)
+		@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, debug)
+		@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, debug)
 	</div>
 }
 
@@ -29,15 +30,20 @@ script DisableButton() {
     for (const b of document.getElementsByClassName("battle-card")) {
         b.disabled = true;
     }
+	for (const b of document.getElementsByClassName("win-chance")) {
+    	b.classList.remove("invisible");
+    	b.classList.add("h-auto");
+    }
 }
 
-templ Card(card models.Card, token string, index int, debug bool) {
+templ Card(card models.Card, token string, index int, winChance float32, debug bool) {
 	<button
 		hx-post={ fmt.Sprintf("/card/%s/%d", token, index) }
 		hx-target="#cards"
+		hx-trigger="click delay:2s"
 		hx-indicator="#card-loader"
 		onClick={ DisableButton() }
-		class="rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md hover:brightness-125"
+		class="battle-card rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md hover:brightness-125"
 	>
 		<div class="p-4 md:p-6 flex flex-col items-center">
 			<img
@@ -47,7 +53,12 @@ templ Card(card models.Card, token string, index int, debug bool) {
 			if debug {
 				<p class="dark:text-white">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
 			}
-			<p class="text-clip mt-2 md:mt-4 text-xl md:text-3xl font-semibold text-center">{ card.Name }</p>
+			if winChance > 0.5 {
+				<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-green-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+			} else {
+				<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-red-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+			}
+			<p class="text-clip mt-1 md:mt-2 text-xl md:text-3xl font-semibold text-center">{ card.Name }</p>
 		</div>
 	</button>
 }

@@ -1,11 +1,21 @@
 package internal
 
 import (
+	"compare/models"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 )
+
+type Battle struct {
+	ID                       int
+	Card1, Card2             *models.Card
+	Card1Chance, Card2Chance float32
+	Token                    string
+	Start                    time.Time
+}
 
 // Generate a random token of a given length.
 // len is the amount of random bytes to generate.

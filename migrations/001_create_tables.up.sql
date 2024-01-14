@@ -10,11 +10,13 @@ CREATE TABLE IF NOT EXISTS cards (
 
 CREATE TABLE IF NOT EXISTS battles (
     id SERIAL PRIMARY KEY,
-    start TIMESTAMP DEFAULT NOW(),
     card1_id INT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
     card2_id INT NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
-    token TEXT NOT NULL
+    card1_wins INT NOT NULL DEFAULT 0,
+    card2_wins INT NOT NULL DEFAULT 0,
+    CONSTRAINT card_order CHECK (card1_id < card2_id)
 );
+    
 
 CREATE TABLE IF NOT EXISTS user_tokens (
     id SERIAL PRIMARY KEY,

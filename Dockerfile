@@ -13,6 +13,7 @@ COPY go.mod go.sum main.go ./
 COPY internal internal
 COPY components components
 COPY models models
+COPY migrations migrations
 
 RUN templ generate components
 RUN go get

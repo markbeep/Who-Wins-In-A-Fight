@@ -183,7 +183,11 @@ func CardPATCH(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Re
 		card.Accepted = true
 		card.Update(r.Context(), tx, boil.Infer())
 
-		tx.Commit()
+		err = tx.Commit()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to commit. err = %s", err), http.StatusInternalServerError)
+			return
+		}
 
 		var count int64
 		if isReview {
@@ -250,7 +254,11 @@ func CardDELETE(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.R
 		}
 		card.Delete(r.Context(), tx)
 
-		tx.Commit()
+		err = tx.Commit()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to commit. err = %s", err), http.StatusInternalServerError)
+			return
+		}
 
 		// delete file locally
 		path := path.Join(imageSaveDir, card.Filename)

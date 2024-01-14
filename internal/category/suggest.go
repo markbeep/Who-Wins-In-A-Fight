@@ -149,7 +149,11 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		}
 		card.Insert(r.Context(), tx, boil.Infer())
 
-		tx.Commit()
+		err = tx.Commit()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to commit. err = %s", err), http.StatusInternalServerError)
+			return
+		}
 
 		templ.Handler(components.SuggestSuccess(name)).ServeHTTP(w, r)
 	}

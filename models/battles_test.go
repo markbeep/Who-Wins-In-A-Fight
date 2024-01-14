@@ -805,7 +805,7 @@ func testBattlesSelect(t *testing.T) {
 }
 
 var (
-	battleDBTypes = map[string]string{`ID`: `integer`, `Start`: `timestamp without time zone`, `Card1ID`: `integer`, `Card2ID`: `integer`, `Token`: `text`}
+	battleDBTypes = map[string]string{`ID`: `integer`, `Card1ID`: `integer`, `Card2ID`: `integer`, `Card1Wins`: `integer`, `Card2Wins`: `integer`}
 	_             = bytes.MinRead
 )
 
