@@ -79,6 +79,9 @@ func getRandomBattle(ctx context.Context, db *sql.DB) (*internal.Battle, error) 
 	}
 
 	total := float32(battle.Card1Wins + battle.Card2Wins)
+	if total == 0.0 {
+		total++
+	}
 	localBattle := internal.Battle{
 		ID:          battle.ID,
 		Card1:       card1,

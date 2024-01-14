@@ -1,6 +1,8 @@
-# Compare
+# Who Would Win in a Fight?
 
-Ever wanted to compare some list of images to find out which one is truly the best? Fret no more, with this tool you can upload images with some description and have them get battled out.
+It's a simple question. You are given two characters. Who would win in a fight?
+
+![Index Page](media/index_page.png)
 
 ## Development
 
