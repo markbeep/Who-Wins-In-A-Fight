@@ -11,7 +11,7 @@ Requires tailwindcss, templ and go 1.21
 To run locally, execute:
 
 ```sh
-tools/run.sh
+sh tools/run.sh
 ```
 
 This will also attempt to start auto reloading on changes.

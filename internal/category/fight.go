@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/a-h/templ"
@@ -20,83 +21,14 @@ import (
 
 const DEBUG = false
 
-// TODO: clear out old battles after some time
+// keeps a cache to only allow for battle post requests which are
+// active battles (to prevent easy abuse of spamming the same request multiple times)
 var battleCache = map[string]internal.Battle{}
 var cacheMutex = sync.RWMutex{}
 
-func getRandomBattle(ctx context.Context, db *sql.DB) (*internal.Battle, error) {
-	card1, err := models.Cards(
-		qm.Where(fmt.Sprintf("%s = true", models.CardColumns.Accepted)),
-		qm.OrderBy("RANDOM()"),
-	).One(ctx, db)
-	if err != nil {
-		return nil, err
-	}
-
-	card2, err := models.Cards(
-		qm.Where(fmt.Sprintf("%s != ? AND %s = true", models.CardColumns.ID, models.CardColumns.Accepted), card1.ID),
-		qm.OrderBy("RANDOM()"),
-	).One(ctx, db)
-	if err != nil {
-		return nil, err
-	}
-
-	// Make sure card1.ID < card2.ID
-	if card1.ID > card2.ID {
-		card1, card2 = card2, card1
-	}
-
-	battle, err := models.Battles(
-		qm.Where(fmt.Sprintf("%s = ? AND %s = ?", models.BattleColumns.Card1ID, models.BattleColumns.Card2ID), card1.ID, card2.ID),
-	).One(ctx, db)
-	if err == sql.ErrNoRows {
-		battle = &models.Battle{
-			Card1ID: card1.ID,
-			Card2ID: card2.ID,
-		}
-		if err = battle.Insert(ctx, db, boil.Infer()); err != nil {
-			return nil, err
-		}
-		if err = battle.Reload(ctx, db); err != nil {
-			return nil, err
-		}
-	} else if err != nil {
-		return nil, err
-	}
-
-	var token string
-	for {
-		token, err = internal.GenerateToken(10)
-		if err != nil {
-			return nil, err
-		}
-		cacheMutex.RLock()
-		_, ok := battleCache[token]
-		cacheMutex.RUnlock()
-		if !ok {
-			break
-		}
-	}
-
-	total := float32(battle.Card1Wins + battle.Card2Wins)
-	if total == 0.0 {
-		total++
-	}
-	localBattle := internal.Battle{
-		ID:          battle.ID,
-		Card1:       card1,
-		Card2:       card2,
-		Card1Chance: float32(battle.Card1Wins) / total,
-		Card2Chance: float32(battle.Card2Wins) / total,
-		Token:       token,
-		Start:       time.Now(),
-	}
-	cacheMutex.Lock()
-	battleCache[token] = localBattle
-	cacheMutex.Unlock()
-
-	return &localBattle, nil
-}
+// atomic int for when cache was last cleared for old battles
+var lastClearedTs int64 = time.Now().Unix()
+var clearInterval = 10 * time.Minute
 
 func BattleGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -178,4 +110,95 @@ func BattlePOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 		}
 		templ.Handler(components.Battle(newBattle, DEBUG)).ServeHTTP(w, r)
 	}
+}
+
+func getRandomBattle(ctx context.Context, db *sql.DB) (*internal.Battle, error) {
+	card1, err := models.Cards(
+		qm.Where(fmt.Sprintf("%s = true", models.CardColumns.Accepted)),
+		qm.OrderBy("RANDOM()"),
+	).One(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+
+	card2, err := models.Cards(
+		qm.Where(fmt.Sprintf("%s != ? AND %s = true", models.CardColumns.ID, models.CardColumns.Accepted), card1.ID),
+		qm.OrderBy("RANDOM()"),
+	).One(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make sure card1.ID < card2.ID
+	if card1.ID > card2.ID {
+		card1, card2 = card2, card1
+	}
+
+	battle, err := models.Battles(
+		qm.Where(fmt.Sprintf("%s = ? AND %s = ?", models.BattleColumns.Card1ID, models.BattleColumns.Card2ID), card1.ID, card2.ID),
+	).One(ctx, db)
+	if err == sql.ErrNoRows {
+		battle = &models.Battle{
+			Card1ID: card1.ID,
+			Card2ID: card2.ID,
+		}
+		if err = battle.Insert(ctx, db, boil.Infer()); err != nil {
+			return nil, err
+		}
+		if err = battle.Reload(ctx, db); err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	var token string
+	for {
+		token, err = internal.GenerateToken(10)
+		if err != nil {
+			return nil, err
+		}
+		cacheMutex.RLock()
+		_, ok := battleCache[token]
+		cacheMutex.RUnlock()
+		if !ok {
+			break
+		}
+	}
+
+	total := float32(battle.Card1Wins + battle.Card2Wins)
+	if total == 0.0 {
+		total++
+	}
+	localBattle := internal.Battle{
+		ID:          battle.ID,
+		Card1:       card1,
+		Card2:       card2,
+		Card1Chance: float32(battle.Card1Wins) / total,
+		Card2Chance: float32(battle.Card2Wins) / total,
+		Token:       token,
+		Start:       time.Now(),
+	}
+	cacheMutex.Lock()
+	battleCache[token] = localBattle
+	cacheMutex.Unlock()
+
+	if time.Since(time.Unix(atomic.LoadInt64(&lastClearedTs), 0)) > clearInterval {
+		go clearOldBattles()
+		atomic.StoreInt64(&lastClearedTs, time.Now().Unix())
+	}
+
+	return &localBattle, nil
+}
+
+func clearOldBattles() {
+	cacheMutex.Lock()
+	beforeLen := len(battleCache)
+	for k, v := range battleCache {
+		if time.Since(v.Start) > clearInterval {
+			delete(battleCache, k)
+		}
+	}
+	cacheMutex.Unlock()
+	log.Printf("cache cleared. length %d -> %d", beforeLen, len(battleCache))
 }
