@@ -2,32 +2,6 @@
 @tailwind utilities;
 @tailwind base;
 
-.htmx-indicator {
-    opacity: 0;
-    transition: opacity 500ms ease-in;
-    -webkit-animation: pulsate 3s ease-out;
-    -webkit-animation-iteration-count: infinite;
-    opacity: 0.5;
-}
-
-@-webkit-keyframes pulsate {
-    0% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 1.0;
-    }
-
-    100% {
-        opacity: 0.5;
-    }
-}
-
-.htmx-request .htmx-indicator {
-    opacity: 1
-}
-
-.htmx-request.htmx-indicator {
-    opacity: 1
+.htmx-request {
+    @apply animate-pulse;
 }

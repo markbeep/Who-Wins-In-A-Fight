@@ -7,20 +7,22 @@ import "compare/internal"
 templ Index(battle *internal.Battle, debug bool) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
 		<main class="flex flex-col items-center justify-center h-full p-2">
-			<h1 class="text-4xl font-bold mb-4 sm:mb-10 text-center">Who would win in a fight?</h1>
+			<h1 class="text-4xl font-bold mb-6 sm:mb-10 text-center">Who would win in a fight?</h1>
 			if battle == nil {
 				<p class="italic text-gray-400 mt-2">Not enough images added to start a fight</p>
 			} else {
 				@Battle(battle, debug)
+				<a href="/" class="mt-2 md:mt-4 w-40 sm:w-48 md:w-72" hx-boost="true">
+					@Button("Don't know")
+				</a>
 			}
-			<p id="card-loader" class="text-gray-400 htmx-indicator mt-2">Loading next battle...</p>
 			@Navbar("Home")
 		</main>
 	}
 }
 
 templ Battle(battle *internal.Battle, debug bool) {
-	<div id="cards" class="flex flex-col md:flex-row gap-4">
+	<div id="cards" class="my-indicator flex flex-col md:flex-row gap-2 sm:gap-4">
 		if battle.Card1Chance > 0 || battle.Card2Chance > 0 {
 			@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, "click delay:1s", true,  debug)
 			@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, "click delay:1s", true, debug)
@@ -46,7 +48,7 @@ templ Card(card models.Card, token string, index int, winChance float32, buttonE
 		hx-post={ fmt.Sprintf("/card/%s/%d", token, index) }
 		hx-target="#cards"
 		hx-trigger={ buttonEvent }
-		hx-indicator="#card-loader"
+		hx-indicator="#cards"
 		onClick={ DisableButton() }
 		class="battle-card rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md hover:brightness-125"
 	>
@@ -60,12 +62,12 @@ templ Card(card models.Card, token string, index int, winChance float32, buttonE
 			}
 			if showWinChance {
 				if winChance > 0.5 {
-					<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-green-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+					<p id="win-chance" class="win-chance text-sm md:text-xl mt-1 sm:mt-2 h-0 text-green-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
 				} else {
-					<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-red-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+					<p id="win-chance" class="win-chance text-sm md:text-xl mt-1 sm:mt-2 h-0 text-red-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
 				}
 			}
-			<p class="text-clip mt-1 md:mt-2 text-xl md:text-3xl font-semibold text-center">{ card.Name }</p>
+			<p class="text-clip mt-1 md:mt-2 text-md sm:text-xl md:text-3xl font-semibold text-center">{ card.Name }</p>
 		</div>
 	</button>
 }
