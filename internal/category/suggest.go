@@ -86,6 +86,17 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			templ.Handler(components.SuggestForm(false, true, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 			return
 		}
+		b, err := io.ReadAll(f)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to read image file. err = %s", err), http.StatusInternalServerError)
+			return
+		}
+		contentType := http.DetectContentType(b)
+		if !strings.HasPrefix(contentType, "image/") {
+			log.Printf("invalid filetype uploaded. got = %s", contentType)
+			templ.Handler(components.SuggestForm(false, true, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
+			return
+		}
 
 		tx, err := db.BeginTx(r.Context(), nil)
 		if err != nil {
@@ -122,12 +133,6 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer save.Close()
-		b, err := io.ReadAll(f)
-		if err != nil {
-			tx.Rollback()
-			http.Error(w, fmt.Sprintf("failed to read image file. err = %s", err), http.StatusInternalServerError)
-			return
-		}
 		// TODO: compress image
 		writeLen, err := save.Write(b)
 		if err != nil {
