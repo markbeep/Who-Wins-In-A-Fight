@@ -21,8 +21,8 @@ templ Index(battle *internal.Battle, debug bool) {
 
 templ Battle(battle *internal.Battle, debug bool) {
 	<div id="cards" class="flex flex-col md:flex-row gap-4">
-		@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, debug)
-		@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, debug)
+		@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, battle.Card1Chance > 0 || battle.Card2Chance > 0, debug)
+		@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, battle.Card1Chance > 0 || battle.Card2Chance > 0, debug)
 	</div>
 }
 
@@ -36,7 +36,7 @@ script DisableButton() {
     }
 }
 
-templ Card(card models.Card, token string, index int, winChance float32, debug bool) {
+templ Card(card models.Card, token string, index int, winChance float32, showWinChance, debug bool) {
 	<button
 		hx-post={ fmt.Sprintf("/card/%s/%d", token, index) }
 		hx-target="#cards"
@@ -53,10 +53,12 @@ templ Card(card models.Card, token string, index int, winChance float32, debug b
 			if debug {
 				<p class="dark:text-white">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>
 			}
-			if winChance > 0.5 {
-				<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-green-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
-			} else {
-				<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-red-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+			if showWinChance {
+				if winChance > 0.5 {
+					<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-green-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+				} else {
+					<p id="win-chance" class="win-chance text-sm md:text-xl mt-2 h-0 text-red-400 invisible">{ fmt.Sprintf("Wins %d%% of the time", int(100*winChance)) }</p>
+				}
 			}
 			<p class="text-clip mt-1 md:mt-2 text-xl md:text-3xl font-semibold text-center">{ card.Name }</p>
 		</div>
