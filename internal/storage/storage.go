@@ -38,7 +38,7 @@ func (l MigrationLogger) Verbose() bool {
 func MigrateDatabase(db *sql.DB, logger migrate.Logger, migrationPath string) error {
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open driver. err = %s", err)
 	}
 
 	logger.Printf("running migrations")
@@ -46,11 +46,11 @@ func MigrateDatabase(db *sql.DB, logger migrate.Logger, migrationPath string) er
 		fmt.Sprintf("file://%s", migrationPath), "postgres", driver,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create new database instance. err = %s", err)
 	}
 	m.Log = logger
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		return err
+		return fmt.Errorf("failed to migrate. err = %s", err)
 	}
 	if err == migrate.ErrNoChange {
 		logger.Printf("no migrations to apply")

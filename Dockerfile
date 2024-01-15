@@ -3,8 +3,7 @@ WORKDIR /app
 
 # Download tailwindcss
 RUN apk add --no-cache curl
-RUN curl -o /bin/tailwindcss -sSL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.5/tailwindcss-linux-x64
-# RUN curl -o /bin/tailwindcss -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.5/tailwindcss-linux-arm64
+RUN curl -o /bin/tailwindcss -sSL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.1/tailwindcss-linux-x64
 RUN chmod +x /bin/tailwindcss
 RUN go install github.com/a-h/templ/cmd/templ@latest
 

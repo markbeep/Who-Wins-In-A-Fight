@@ -7,7 +7,7 @@ import "compare/internal"
 templ Index(battle *internal.Battle, debug bool) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
 		<main class="flex flex-col items-center justify-center h-full p-2">
-			<h1 class="text-4xl font-bold mb-10 text-center">Who would win in a fight?</h1>
+			<h1 class="text-4xl font-bold mb-4 sm:mb-10 text-center">Who would win in a fight?</h1>
 			if battle == nil {
 				<p class="italic text-gray-400 mt-2">Not enough images added to start a fight</p>
 			} else {
@@ -45,10 +45,10 @@ templ Card(card models.Card, token string, index int, winChance float32, debug b
 		onClick={ DisableButton() }
 		class="battle-card rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md hover:brightness-125"
 	>
-		<div class="p-4 md:p-6 flex flex-col items-center">
+		<div class="p-2 sm:p-4 md:p-6 flex flex-col items-center">
 			<img
 				src={ fmt.Sprintf("/static/imgs/%s", card.Filename) }
-				class="object-cover aspect-square w-40 md:w-64 rounded-lg object-top"
+				class="object-cover aspect-square w-32 sm:w-40 md:w-64 rounded-lg object-top"
 			/>
 			if debug {
 				<p class="dark:text-white">Wins: { fmt.Sprintf("%d", card.Wins) } (debug)</p>

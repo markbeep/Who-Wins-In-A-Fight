@@ -116,7 +116,7 @@ func Static(w http.ResponseWriter, r *http.Request) {
 	path := strings.Trim(r.URL.Path, "/")
 	fileInfo, err := os.Stat(path)
 	if err != nil || fileInfo.IsDir() {
-		w.Write([]byte("404"))
+		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
 	http.ServeFile(w, r, path)
