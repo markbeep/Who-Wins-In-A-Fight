@@ -21,8 +21,13 @@ templ Index(battle *internal.Battle, debug bool) {
 
 templ Battle(battle *internal.Battle, debug bool) {
 	<div id="cards" class="flex flex-col md:flex-row gap-4">
-		@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, battle.Card1Chance > 0 || battle.Card2Chance > 0, debug)
-		@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, battle.Card1Chance > 0 || battle.Card2Chance > 0, debug)
+		if battle.Card1Chance > 0 || battle.Card2Chance > 0 {
+			@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, "click delay:1s", true,  debug)
+			@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, "click delay:1s", true, debug)
+		} else {
+			@Card(*battle.Card1, battle.Token, 0, battle.Card1Chance, "click", false,  debug)
+			@Card(*battle.Card2, battle.Token, 1, battle.Card2Chance, "click", false, debug)
+		}
 	</div>
 }
 
@@ -36,11 +41,11 @@ script DisableButton() {
     }
 }
 
-templ Card(card models.Card, token string, index int, winChance float32, showWinChance, debug bool) {
+templ Card(card models.Card, token string, index int, winChance float32, buttonEvent string, showWinChance, debug bool) {
 	<button
 		hx-post={ fmt.Sprintf("/card/%s/%d", token, index) }
 		hx-target="#cards"
-		hx-trigger="click delay:2s"
+		hx-trigger={ buttonEvent }
 		hx-indicator="#card-loader"
 		onClick={ DisableButton() }
 		class="battle-card rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md hover:brightness-125"
