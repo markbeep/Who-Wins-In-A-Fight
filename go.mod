@@ -8,11 +8,11 @@ require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/httplog v0.3.2
 	github.com/golang-migrate/migrate v3.5.4+incompatible
+	github.com/h2non/bimg v1.1.9
 	github.com/kat-co/vala v0.0.0-20170210184112-42e1d8b61f12
 	github.com/lib/pq v1.10.9
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.12.0
-	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/randomize v0.0.1
 	github.com/volatiletech/sqlboiler/v4 v4.15.0
 	github.com/volatiletech/strmangle v0.0.5

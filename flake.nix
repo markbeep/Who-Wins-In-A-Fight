@@ -38,6 +38,8 @@
               templ-pkg
               lsof
               sqlboiler
+              vips
+              pkg-config
           ];
         };
       }

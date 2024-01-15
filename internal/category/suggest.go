@@ -16,6 +16,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
+	"github.com/h2non/bimg"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
@@ -27,6 +28,7 @@ type CreateRouteConfig struct {
 	AllowedExtensions []string
 }
 
+var imageWidthHeight = 500
 var maxMemory int64 = 10 << 20
 var imageSaveDir = "./data/imgs"
 var fileExtensions []string = []string{}
@@ -123,7 +125,7 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		imageName := imageToken + path.Ext(fh.Filename)
+		imageName := imageToken + ".jpg"
 		imageLocalPath := path.Join(imageSaveDir, imageName)
 
 		save, err := os.Create(imageLocalPath)
@@ -133,7 +135,14 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer save.Close()
-		// TODO: compress image
+
+		b, err = compressImage(b)
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, fmt.Sprintf("failed to compress image. err = %s", err), http.StatusInternalServerError)
+			return
+		}
+
 		writeLen, err := save.Write(b)
 		if err != nil {
 			tx.Rollback()
@@ -162,4 +171,16 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 
 		templ.Handler(components.SuggestSuccess(name)).ServeHTTP(w, r)
 	}
+}
+
+func compressImage(b []byte) ([]byte, error) {
+	image, err := bimg.NewImage(b).SmartCrop(imageWidthHeight, imageWidthHeight)
+	if err != nil {
+		return nil, err
+	}
+	image, err = bimg.NewImage(image).Convert(bimg.JPEG)
+	if err != nil {
+		return nil, err
+	}
+	return image, nil
 }
