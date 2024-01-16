@@ -90,6 +90,7 @@ func main() {
 	r.Get("/static/*", Static)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("healthy")) })
 	r.Post("/card/{token:[\\w-]+}/{index:\\d+}", category.BattlePOST(db))
+	r.Get("/leaderboard", category.LeaderboardGET(db))
 	r.Route("/suggest", category.SuggestRoute(db, &createConfig))
 	r.Route("/admin", category.AdminRoute(db, &createConfig))
 

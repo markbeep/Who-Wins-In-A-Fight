@@ -131,15 +131,11 @@ func CardGET(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Requ
 			http.Error(w, fmt.Sprintf("failed to fetch cards. err = %s", err), http.StatusInternalServerError)
 			return
 		}
-		allCards := []models.Card{}
-		for _, c := range cards {
-			allCards = append(allCards, *c)
-		}
 
 		if isReview {
-			templ.Handler(components.ReviewIndex(token, allCards)).ServeHTTP(w, r)
+			templ.Handler(components.ReviewIndex(token, cards)).ServeHTTP(w, r)
 		} else {
-			templ.Handler(components.EditIndex(token, allCards)).ServeHTTP(w, r)
+			templ.Handler(components.EditIndex(token, cards)).ServeHTTP(w, r)
 		}
 
 	}
@@ -216,7 +212,7 @@ func CardPATCH(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Re
 		if isReview {
 			w.Write([]byte("200"))
 		} else {
-			templ.Handler(components.EditCard(token, *card, isReview)).ServeHTTP(w, r)
+			templ.Handler(components.EditCard(token, card, isReview)).ServeHTTP(w, r)
 		}
 
 	}

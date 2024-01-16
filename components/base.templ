@@ -50,6 +50,7 @@ templ Navbar(ignore string) {
 				<a class="hover:text-gray-300" href="/">Home</a>
 			}
 			<a class="hover:text-gray-300" href="/suggest">Suggest</a>
+			<a class="hover:text-gray-300" href="/leaderboard">Leaderboard</a>
 			<a class="hover:text-gray-300" href="/admin">Admin</a>
 		</nav>
 	</div>
@@ -79,22 +80,4 @@ templ Input(name, placeholder, extraClass, defaultValue string) {
 
 templ Label(text, forInput string) {
 	<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for={ forInput }>{ text }</label>
-}
-
-templ CrossIcon() {
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		width="24"
-		height="24"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-		class="h-4 w-4"
-	>
-		<path d="M18 6 6 18"></path>
-		<path d="m6 6 12 12"></path>
-	</svg>
 }
