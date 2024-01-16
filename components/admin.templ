@@ -58,27 +58,27 @@ templ AdminDashboard(token string, pendingReviews int64) {
 	}
 }
 
-templ ReviewIndex(token string, cards []*models.Card) {
+templ ReviewIndex(token string, cards []*models.Card, accept string) {
 	@Base("Review Cards", "Review what cards are valid or should be deleted.") {
 		if len(cards) == 0 {
 			<div
 				id="review-base"
 				class="flex flex-col h-full items-center justify-center space-y-8 py-8"
 			>
-				@reviewContent(token, cards)
+				@reviewContent(token, cards, accept)
 			</div>
 		} else {
 			<div
 				id="review-base"
 				class="flex flex-col items-center justify-center space-y-8 py-8"
 			>
-				@reviewContent(token, cards)
+				@reviewContent(token, cards, accept)
 			</div>
 		}
 	}
 }
 
-templ reviewContent(token string, cards[]*models.Card) {
+templ reviewContent(token string, cards[]*models.Card, accept string) {
 	if len(cards) == 0 {
 		<main class="max-w-md space-y-4 px-8 md:px-0">
 			<h3 class="text-2xl font-semibold dark:text-white mb-4">There are no cards to review</h3>
@@ -89,7 +89,7 @@ templ reviewContent(token string, cards[]*models.Card) {
 	} else {
 		<main class="max-w-md space-y-4 px-8 md:px-0">
 			<h1 class="text-3xl font-bold">Review Suggestions</h1>
-			<p class="text-gray-500 dark:text-gray-400">Accept or decline suggestions. If a name needs adjustment, you can also modify it before accepting.</p>
+			<p class="text-gray-500 dark:text-gray-400">Accept or decline suggestions. If a name needs adjustment, you can also modify it before accepting. Click on an image to upload a new version.</p>
 			<a href={ templ.URL(fmt.Sprintf("/admin/%s", token)) }>
 				@Button("Back to admin dashboard")
 			</a>
@@ -98,34 +98,34 @@ templ reviewContent(token string, cards[]*models.Card) {
 			class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
 		>
 			for _, c := range cards {
-				@EditCard(token, c, true)
+				@EditCard(token, c, true, accept)
 			}
 		</div>
 	}
 	@Navbar("Leaderboard")
 }
 
-templ EditIndex(token string, cards []*models.Card) {
+templ EditIndex(token string, cards []*models.Card, accept string) {
 	@Base("Edit Cards", "Edit cards that have already been accepted.") {
 		if len(cards) == 0 {
 			<div
 				id="review-base"
 				class="flex flex-col h-full items-center justify-center space-y-8 py-8"
 			>
-				@editContent(token, cards)
+				@editContent(token, cards, accept)
 			</div>
 		} else {
 			<div
 				id="review-base"
 				class="flex flex-col items-center justify-center space-y-8 py-8"
 			>
-				@editContent(token, cards)
+				@editContent(token, cards, accept)
 			</div>
 		}
 	}
 }
 
-templ editContent(token string, cards []*models.Card) {
+templ editContent(token string, cards []*models.Card, accept string) {
 	if len(cards) == 0 {
 		<main class="max-w-md space-y-4 px-8 md:px-0">
 			<h3 class="text-2xl font-semibold dark:text-white mb-4">There are no cards to edit</h3>
@@ -136,7 +136,7 @@ templ editContent(token string, cards []*models.Card) {
 	} else {
 		<main class="max-w-md space-y-4 px-8 md:px-0">
 			<h1 class="text-3xl font-bold">Edit Cards</h1>
-			<p class="text-gray-500 dark:text-gray-400">Edit cards or delete them completely.</p>
+			<p class="text-gray-500 dark:text-gray-400">Edit cards or delete them completely. Click on an image to upload a new version.</p>
 			<a href={ templ.URL(fmt.Sprintf("/admin/%s", token)) }>
 				@Button("Back to admin dashboard")
 			</a>
@@ -145,28 +145,74 @@ templ editContent(token string, cards []*models.Card) {
 			class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
 		>
 			for _, c := range cards {
-				@EditCard(token, c, false)
+				@EditCard(token, c, false, accept)
 			}
 		</div>
 	}
 	@Navbar("Leaderboard")
 }
 
-templ EditCard(token string, c *models.Card, isReview bool) {
+script showImageEditCard(id int) {
+	var input = document.getElementById(`upload-${id}`);
+
+	if (input.files && input.files[0]) {
+		var reader = new FileReader();
+		reader.readAsDataURL(input.files[0]);
+		reader.onload = function(e) {
+			var imgElement = document.getElementById(`image-${id}`);
+			imgElement.src = e.target.result;
+			var updateButton = document.getElementById(`button-${id}`);
+			updateButton.removeAttribute('disabled');
+		}
+		reader.readAsDataURL(input.files[0]);
+		
+	}
+}
+
+templ UpdateImageButton(id int) {
+	<button
+		id={ fmt.Sprintf("button-%d", id) }
+		class="inline-flex items-center justify-center rounded-md text-sm font-semibold ring-offset-black transition-colors
+						disabled:cursor-not-allowed disabled:opacity-50 h-10 px-4 py-2 w-full bg-white text-black"
+		disabled
+	>Update image</button>
+}
+
+templ EditCard(token string, c *models.Card, isReview bool, accept string) {
 	<div
 		id={ fmt.Sprintf("review-card-%d", c.ID) }
 		class="relative group overflow-hidden rounded-lg border bg-card shadow-sm shadow-gray-400 max-w-md"
 	>
-		<div class="p-6 flex flex-col items-center space-y-2">
-			<img
-				src={ fmt.Sprintf("/static/imgs/%s", c.Filename) }
-				class="object-cover aspect-square w-full rounded-lg max-w-64 object-top"
-			/>
+		<div class="p-6 flex flex-col items-center">
+			<form
+				hx-patch={ fmt.Sprintf("/admin/%s/image/%d/%v", token, c.ID, isReview) }
+				hx-swap="outerHTML"
+				class="space-y-2 w-full"
+				hx-encoding="multipart/form-data"
+				hx-target={ fmt.Sprintf("#button-%d", c.ID) }
+			>
+				<label>
+					<input
+						class="hidden"
+						type="file"
+						id={ fmt.Sprintf("upload-%d", c.ID) }
+						name="image"
+						accept={ accept }
+						onChange={ showImageEditCard(c.ID) }
+					/>
+					<img
+						id={ fmt.Sprintf("image-%d", c.ID) }
+						src={ fmt.Sprintf("/static/imgs/%s", c.Filename) }
+						class="object-cover aspect-square w-full rounded-lg max-w-64 object-top cursor-pointer"
+					/>
+				</label>
+				@UpdateImageButton(c.ID)
+			</form>
 			if isReview {
 				<form
 					hx-patch={ fmt.Sprintf("/admin/%s/review/%d", token, c.ID) }
 					hx-swap="delete"
-					class="space-y-2 w-full"
+					class="space-y-4 w-full"
 					hx-target={ fmt.Sprintf("#review-card-%d", c.ID) }
 				>
 					@Input("name", c.Name, "placeholder:text-white/90", c.Name)
@@ -184,7 +230,7 @@ templ EditCard(token string, c *models.Card, isReview bool) {
 				<form
 					hx-patch={ fmt.Sprintf("/admin/%s/edit/%d", token, c.ID) }
 					hx-swap="outerHTML"
-					class="space-y-2 w-full"
+					class="space-y-4 w-full"
 					hx-target={ fmt.Sprintf("#review-card-%d", c.ID) }
 				>
 					@Input("name", c.Name, "placeholder:text-white/90", c.Name)

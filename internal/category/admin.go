@@ -7,11 +7,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -61,9 +64,11 @@ func AdminRoute(db *sql.DB, c *CreateRouteConfig) func(r chi.Router) {
 		r.Get("/{token:[\\w-]+}/review", CardGET(db, true))
 		r.Patch("/{token:[\\w-]+}/review/{id:\\d+}", CardPATCH(db, true))
 		r.Delete("/{token:[\\w-]+}/review/{id:\\d+}", CardDELETE(db, true))
+		r.Patch("/{token:[\\w-]+}/image/{id:\\d+}/true", ImagePATCH(db, true))
 		r.Get("/{token:[\\w-]+}/edit", CardGET(db, false))
 		r.Patch("/{token:[\\w-]+}/edit/{id:\\d+}", CardPATCH(db, false))
 		r.Delete("/{token:[\\w-]+}/edit/{id:\\d+}", CardDELETE(db, false))
+		r.Patch("/{token:[\\w-]+}/image/{id:\\d+}/false", ImagePATCH(db, false))
 	}
 }
 
@@ -133,9 +138,9 @@ func CardGET(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Requ
 		}
 
 		if isReview {
-			templ.Handler(components.ReviewIndex(token, cards)).ServeHTTP(w, r)
+			templ.Handler(components.ReviewIndex(token, cards, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 		} else {
-			templ.Handler(components.EditIndex(token, cards)).ServeHTTP(w, r)
+			templ.Handler(components.EditIndex(token, cards, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 		}
 
 	}
@@ -212,7 +217,7 @@ func CardPATCH(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Re
 		if isReview {
 			w.Write([]byte("200"))
 		} else {
-			templ.Handler(components.EditCard(token, card, isReview)).ServeHTTP(w, r)
+			templ.Handler(components.EditCard(token, card, isReview, strings.Join(fileExtensions, ", "))).ServeHTTP(w, r)
 		}
 
 	}
@@ -291,8 +296,109 @@ func CardDELETE(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.R
 	}
 }
 
-func EditGET(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+func ImagePATCH(db *sql.DB, isReview bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		token := chi.URLParam(r, "token")
+
+		valid, err := validateToken(token, r.Context(), db)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to check if token is valid. err = %s", err), http.StatusInternalServerError)
+			return
+		} else if !valid {
+			http.Error(w, "invalid token", http.StatusInternalServerError)
+			return
+		}
+
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, "invalid url parameter", http.StatusBadRequest)
+			return
+		}
+
+		card, err := models.FindCard(r.Context(), db, id)
+		if err != nil {
+			http.Error(w, "invalid card id", http.StatusBadRequest)
+			return
+		}
+
+		err = r.ParseMultipartForm(maxMemory)
+		if err != nil {
+			http.Error(w, "failed to parse form", http.StatusBadRequest)
+			return
+		}
+
+		f, fh, err := r.FormFile("image")
+		if err == http.ErrMissingFile {
+			http.Error(w, "no image passed along to form", http.StatusBadRequest)
+			return
+		} else if err != nil {
+			http.Error(w, fmt.Sprintf("err = %s", err), http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+
+		if fh.Size > maxMemory {
+			http.Error(w, "no image passed along to form", http.StatusBadRequest)
+			return
+		}
+
+		if !slices.Contains(fileExtensions, path.Ext(fh.Filename)) {
+			http.Error(w, "no image passed along to form", http.StatusBadRequest)
+			return
+		}
+
+		b, err := io.ReadAll(f)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to read image file. err = %s", err), http.StatusInternalServerError)
+			return
+		}
+		contentType := http.DetectContentType(b)
+		if !strings.HasPrefix(contentType, "image/") {
+			log.Printf("invalid filetype uploaded. got = %s", contentType)
+			http.Error(w, "no image passed along to form", http.StatusBadRequest)
+			return
+		}
+
+		imageOldPath := path.Join(imageSaveDir, card.Filename)
+		_ = os.Remove(imageOldPath) // ignore any errors for deleting
+
+		imageName := card.Token + ".jpg"
+		imageLocalPath := path.Join(imageSaveDir, imageName)
+
+		save, err := os.Create(imageLocalPath)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to create file. err = %s", err), http.StatusInternalServerError)
+			return
+		}
+		defer save.Close()
+
+		b, err = compressImage(b)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to compress image. err = %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		writeLen, err := save.Write(b)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to write new image file. err = %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		if writeLen == 0 {
+			http.Error(w, "written file length is 0", http.StatusInternalServerError)
+			return
+		}
+
+		if imageName != card.Filename {
+			card.Filename = imageName
+			if _, err = card.Update(r.Context(), db, boil.Infer()); err != nil {
+				http.Error(w, fmt.Sprintf("unable to update card name. err = %s", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		templ.Handler(components.UpdateImageButton(card.ID)).ServeHTTP(w, r)
+
 	}
 }
 

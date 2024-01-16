@@ -35,10 +35,10 @@ templ SuggestForm(invalidName, invalidFile bool, imageAccept string) {
 			<div class="w-full space-y-2">
 				@Label("Image Upload (has to be under 10MB)", "image")
 				if invalidFile {
-					@fileUpload("border-red-400", imageAccept)
+					@fileUpload(imageAccept)
 					<p class="text-red-400">Invalid file</p>
 				} else {
-					@fileUpload("", imageAccept)
+					@fileUpload(imageAccept)
 				}
 			</div>
 		</div>
@@ -59,7 +59,6 @@ templ SuggestSuccess(name string) {
 // Takes an uploaded image and adds it to the crop window
 
 script showImage() {
-	console.log("test")
 	var input = document.getElementById('img-upload');
 
 	if (input.files && input.files[0]) {
@@ -77,7 +76,7 @@ script showImage() {
 	}
 }
 
-templ fileUpload(extraClass, accept string) {
+templ fileUpload(accept string) {
 	<label>
 		<input
 			class="hidden"
@@ -87,7 +86,7 @@ templ fileUpload(extraClass, accept string) {
 			accept={ accept }
 			onChange={ showImage() }
 		/>
-		<div class="mt-1 border dark:border-white p-4 rounded-lg w-full cursor-pointer text-center">
+		<div class={ "mt-1 border dark:border-white p-4 rounded-lg w-full cursor-pointer text-center" }>
 			<p id="crop-label">Click here to upload</p>
 			<img
 				class="object-cover aspect-square w-full rounded-lg object-top hidden"
