@@ -1,13 +1,11 @@
 package components
 
-import "fmt"
-
 templ SuggestIndex(invalidName, invalidFile bool, imageAccept string) {
 	@Base("Who would win in a fight?", "Who would win in a fight? You decide!") {
-		<div class="w-full flex flex-col items-center h-full justify-center">
-			<main class="w-full max-w-md space-y-8 px-8 md:px-0">
+		<div class="w-full flex flex-col items-center sm:h-full sm:justify-center">
+			<main class="w-full max-w-md space-y-8 py-10 px-4 sm:p-0">
 				<div class="space-y-4">
-					<h1 class="text-3xl font-bold">Suggest a Character</h1>
+					<h1 class="text-2xl sm:text-3xl font-bold">Suggest a Character</h1>
 					<p class="text-gray-500 dark:text-gray-400">Want to suggest a new character? Give their name and upload a picture. Should not contain any nudity.</p>
 				</div>
 				@SuggestForm(invalidName, invalidFile, imageAccept)
@@ -33,29 +31,19 @@ templ SuggestForm(invalidName, invalidFile bool, imageAccept string) {
 				@Input("name", "John Cena", "", "")
 			}
 		</div>
-		<div class="space-y-2">
-			@Label("Image Upload (has to be under 10MB)", "image")
-			if invalidFile {
-				@fileUpload("border-red-400", imageAccept)
-				<p class="text-red-400">Invalid file</p>
-			} else {
-				@fileUpload("", imageAccept)
-			}
+		<div class="space-y-4 flex flex-col items-center">
+			<div class="w-full space-y-2">
+				@Label("Image Upload (has to be under 10MB)", "image")
+				if invalidFile {
+					@fileUpload("border-red-400", imageAccept)
+					<p class="text-red-400">Invalid file</p>
+				} else {
+					@fileUpload("", imageAccept)
+				}
+			</div>
 		</div>
 		@Button("Submit!")
 	</form>
-}
-
-templ fileUpload(extraClass, accept string) {
-	<input
-		class={ fmt.Sprintf(`flex h-10 w-full rounded-md border border-input dark:bg-black px-3 py-2 text-sm ring-offset-black
-					placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-					disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-white file:text-sm file:font-medium %s`, extraClass) }
-		type="file"
-		id="img"
-		name="image"
-		accept=".png, .jpg, .jpeg"
-	/>
 }
 
 templ SuggestSuccess(name string) {
@@ -66,4 +54,46 @@ templ SuggestSuccess(name string) {
 			@Button("Suggest another character")
 		</a>
 	</div>
+}
+
+// Takes an uploaded image and adds it to the crop window
+
+script showImage() {
+	console.log("test")
+	var input = document.getElementById('img-upload');
+
+	if (input.files && input.files[0]) {
+		var reader = new FileReader();
+		reader.readAsDataURL(input.files[0]);
+		reader.onload = function(e) {
+			var imgElement = document.getElementById('crop-image');
+			imgElement.src = e.target.result;
+			imgElement.classList.remove('hidden');
+			var textElement = document.getElementById('crop-label');
+			textElement.classList.add('hidden');
+		}
+		reader.readAsDataURL(input.files[0]);
+		
+	}
+}
+
+templ fileUpload(extraClass, accept string) {
+	<label>
+		<input
+			class="hidden"
+			type="file"
+			id="img-upload"
+			name="image"
+			accept={ accept }
+			onChange={ showImage() }
+		/>
+		<div class="mt-1 border dark:border-white p-4 rounded-lg w-full cursor-pointer text-center">
+			<p id="crop-label">Upload here</p>
+			<img
+				class="object-cover aspect-square w-full rounded-lg object-top hidden"
+				id="crop-image"
+				src="#"
+			/>
+		</div>
+	</label>
 }

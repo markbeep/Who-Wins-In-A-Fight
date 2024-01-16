@@ -174,11 +174,15 @@ func SuggestPOST(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 }
 
 func compressImage(b []byte) ([]byte, error) {
-	image, err := bimg.NewImage(b).SmartCrop(imageWidthHeight, imageWidthHeight)
-	if err != nil {
-		return nil, err
-	}
-	image, err = bimg.NewImage(image).Convert(bimg.JPEG)
+	image, err := bimg.NewImage(b).Process(bimg.Options{
+		Height:  imageWidthHeight,
+		Width:   imageWidthHeight,
+		Quality: 90,
+		Gravity: bimg.GravityNorth,
+		Embed:   true,
+		Crop:    true,
+		Type:    bimg.JPEG,
+	})
 	if err != nil {
 		return nil, err
 	}
